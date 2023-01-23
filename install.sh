@@ -112,6 +112,7 @@ ACTIONS=(
     server_initial_setup
     install_ssl
     install_xui
+    install_namizun
     install_ocserv
     setup_ocserv_iptables
 )
