@@ -86,12 +86,17 @@ install_ocserv() {
     tar xvf ocserv-1.1.6.tar.xz
     cd ocserv-1.1.6/
     ./configure --sysconfdir=/etc/ && make && make install
+    cd $PROJECT_PATH
+    rm -rf ocserv-1.1.6/ ocserv-1.1.6.tar.xz
     ocpasswd -c /etc/ocserv/ocpasswd $OCSERVUSER
     cp $PROJECT_PATH/ocserv.conf /etc/ocserv/ocserv.conf
     echo "server-cert = /etc/letsencrypt/live/$DOMAIN1/fullchain.pem" >> /etc/ocserv/ocserv.conf
     echo "server-key = /etc/letsencrypt/live/$DOMAIN2/privkey.pem" >> /etc/ocserv/ocserv.conf
+    cp $PROJECT_PATH/ocserv.service /lib/systemd/system/ocserv.service
+    sudo systemctl daemon-reload
     sudo systemctl start ocserv
     sudo systemctl enable ocserv
+    rm -rf 
 }
 
 ACTIONS=(
@@ -99,6 +104,7 @@ ACTIONS=(
     install_ssl
     install_xui
     install_ocserv
+    setup_ocserv_service
 )
 
 # READ ACTIONS
