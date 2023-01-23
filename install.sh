@@ -4,6 +4,7 @@ CERTBOT_EMAIL="email"
 DOMAIN1="ray.example.com"
 DOMAIN2="rayc.example.com"
 SSHPROXY="user@example.com"
+OCSERVUSER="name"
 
 # SCRIPT SETUP
 
@@ -51,6 +52,8 @@ server_initial_setup() {
     apt upgrade -y
     apt dist-upgrade -y
     apt autoremove -y
+    sleep 5
+    reboot
 }
 
 install_ssl() {
@@ -73,10 +76,29 @@ install_namizun() {
     sudo curl https://raw.githubusercontent.com/malkemit/namizun/master/else/setup.sh | sudo proxychains bash
 }
 
+install_ocserv() {
+    apt install build-essential pkg-config nettle-dev gnutls-bin libgnutls28-dev libprotobuf-c1 libev-dev libreadline-dev -y
+    apt autoremove -y
+    echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+    mkdir /etc/ocserv
+    certtool --generate-dh-params --outfile /etc/ocserv/dh.pem
+    wget https://www.infradead.org/ocserv/download/ocserv-1.1.6.tar.xz
+    tar xvf ocserv-1.1.6.tar.xz
+    cd ocserv-1.1.6/
+    ./configure --sysconfdir=/etc/ && make && make install
+    ocpasswd -c /etc/ocserv/ocpasswd $OCSERVUSER
+    cp $PROJECT_PATH/ocserv.conf /etc/ocserv/ocserv.conf
+    echo "server-cert = /etc/letsencrypt/live/$DOMAIN1/fullchain.pem" >> /etc/ocserv/ocserv.conf
+    echo "server-key = /etc/letsencrypt/live/$DOMAIN2/privkey.pem" >> /etc/ocserv/ocserv.conf
+    sudo systemctl start ocserv
+    sudo systemctl enable ocserv
+}
+
 ACTIONS=(
     server_initial_setup
     install_ssl
     install_xui
+    install_ocserv
 )
 
 # READ ACTIONS
