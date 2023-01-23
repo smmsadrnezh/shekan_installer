@@ -7,7 +7,7 @@ SSHPROXY="user@example.com"
 
 # SCRIPT SETUP
 
-export PROJECT_PATH="$(dirname $(dirname $(realpath "$0")))"
+export PROJECT_PATH="$(dirname $(realpath "$0"))"
 cd "$PROJECT_PATH" || exit
 
 if [ "$EUID" -ne 0 ]; then
@@ -54,16 +54,16 @@ server_initial_setup() {
 }
 
 install_ssl() {
+    mkdir -p ~/docker/xui/
     apt install certbot docker.io docker-compose -y
     certbot certonly --email $CERTBOT_EMAIL -d $DOMAIN1 -d $DOMAIN2 --standalone --agree-tos --redirect --noninteractive
-    ln -s /etc/letsencrypt/live/$DOMAIN1/fullchain.pem /root/docker/xui/
-    ln -s /etc/letsencrypt/live/$DOMAIN1/privkey.pem /root/docker/xui/
+    ln -s /etc/letsencrypt/live/$DOMAIN1/fullchain.pem ~/docker/xui/
+    ln -s /etc/letsencrypt/live/$DOMAIN1/privkey.pem ~/docker/xui/
 }
 
 install_xui() {
-    mkdir -p ~/docker/xui/
-    cp docker-compose.yaml ~/docker/xui/
-    cd docker/xui/
+    cp $PROJECT_PATH/docker-compose.yaml ~/docker/xui/
+    cd ~/docker/xui/
     docker-compose up -d
 }
 
