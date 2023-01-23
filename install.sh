@@ -80,6 +80,7 @@ install_ocserv() {
     apt install build-essential pkg-config nettle-dev gnutls-bin libgnutls28-dev libprotobuf-c1 libev-dev libreadline-dev -y
     apt autoremove -y
     echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+    sysctl -p
     mkdir /etc/ocserv
     certtool --generate-dh-params --outfile /etc/ocserv/dh.pem
     wget https://www.infradead.org/ocserv/download/ocserv-1.1.6.tar.xz
@@ -96,7 +97,15 @@ install_ocserv() {
     sudo systemctl daemon-reload
     sudo systemctl start ocserv
     sudo systemctl enable ocserv
-    rm -rf 
+}
+
+setup_ocserv_iptables() {
+    iptables -A FORWARD -s 172.16.0.0/255.240.0.0 -j ACCEPT
+    iptables -A FORWARD -s 10.0.0.0/255.0.0.0 -j ACCEPT
+    iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+    iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+    iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS  --clamp-mss-to-pmtu
+    apt install iptables-persistent -y
 }
 
 ACTIONS=(
@@ -104,7 +113,7 @@ ACTIONS=(
     install_ssl
     install_xui
     install_ocserv
-    setup_ocserv_service
+    setup_ocserv_iptables
 )
 
 # READ ACTIONS
