@@ -2,7 +2,7 @@
 Scripts to deploy v2ray and OcServ on Ubuntu
 
 ```
-git clone https://github.com/smmsadrnezh/zimbra_installer.git
-cd zimbra_installer
+git clone https://github.com/smmsadrnezh/shekan.git
+cd shekan
 bash main.sh
 ```
