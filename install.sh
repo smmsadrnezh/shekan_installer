@@ -83,6 +83,7 @@ install_ocserv() {
     sysctl -p
     mkdir /etc/ocserv
     certtool --generate-dh-params --outfile /etc/ocserv/dh.pem
+    cd /tmp
     wget https://www.infradead.org/ocserv/download/ocserv-1.1.6.tar.xz
     tar xvf ocserv-1.1.6.tar.xz
     cd ocserv-1.1.6/
