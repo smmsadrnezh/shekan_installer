@@ -93,7 +93,7 @@ install_ocserv() {
     ocpasswd -c /etc/ocserv/ocpasswd $OCSERVUSER
     cp $PROJECT_PATH/ocserv.conf /etc/ocserv/ocserv.conf
     echo "server-cert = /etc/letsencrypt/live/$DOMAIN1/fullchain.pem" >> /etc/ocserv/ocserv.conf
-    echo "server-key = /etc/letsencrypt/live/$DOMAIN2/privkey.pem" >> /etc/ocserv/ocserv.conf
+    echo "server-key = /etc/letsencrypt/live/$DOMAIN1/privkey.pem" >> /etc/ocserv/ocserv.conf
     cp $PROJECT_PATH/ocserv.service /lib/systemd/system/ocserv.service
     sudo systemctl daemon-reload
     sudo systemctl start ocserv
