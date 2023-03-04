@@ -68,15 +68,35 @@ install_xui() {
     cp $PROJECT_PATH/docker-compose.yaml ~/docker/xui/
     cd ~/docker/xui/
     docker-compose up -d
-    echo "https://$DOMAIN1:54321"
-    echo "UN: admin"
-    echo "PW: admin"
 }
 
-install_namizun() {
-    apt install proxychains -y
-    ssh -NfD 9050 $SSHPROXY
-    sudo curl https://raw.githubusercontent.com/malkemit/namizun/master/else/setup.sh | sudo proxychains bash
+install_nginx() {
+    apt install nginx -y
+    cp x-ui.conf /etc/nginx/sites-available/x-ui.conf
+    
+}
+
+config_web_panel() {
+    echo "Panel: https://$DOMAIN1:54321"
+    echo "UN: admin"
+    echo "PW: admin"
+    echo "Change password to `apg -n 1 -a 0`"
+    echo ""
+    echo "Add Inbound Setting:"
+    echo "Enable: On"
+    echo "Protocol: vless"
+    echo "Listening IP: EMPTY"
+    echo "Port: 2087"
+    echo "Total Traffic(GB): 0"
+    echo "Transmission: ws"
+    echo "acceptProxyProtocol: Off"
+    echo "Path: /"
+    echo "TLS: On"
+    echo "Domain name: EMPTY"
+    echo "alpn: EMPTY"
+    echo "Certificate.crt file path: /root/tls/fullchain.pem"
+    echo "Private.key file path: /root/tls/privkey.pem"
+    echo "sniffing: On"
 }
 
 install_ocserv() {
@@ -112,13 +132,21 @@ setup_ocserv_iptables() {
     apt install iptables-persistent -y
 }
 
+install_namizun() {
+    apt install proxychains -y
+    ssh -NfD 9050 $SSHPROXY
+    sudo curl https://raw.githubusercontent.com/malkemit/namizun/master/else/setup.sh | sudo proxychains bash
+}
+
 ACTIONS=(
     server_initial_setup
     install_ssl
     install_xui
-    install_namizun
+    install_nginx
+    config_web_panel
     install_ocserv
     setup_ocserv_iptables
+    install_namizun
 )
 
 # READ ACTIONS
