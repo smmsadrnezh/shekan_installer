@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CERTBOT_EMAIL="email"
+CERTBOT_EMAIL="email@example.com"
 DOMAIN1="ray.example.com"
 DOMAIN2="rayc.example.com"
 SSHPROXY="user@example.com"
