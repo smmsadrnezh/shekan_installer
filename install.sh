@@ -68,6 +68,9 @@ install_xui() {
     cp $PROJECT_PATH/docker-compose.yaml ~/docker/xui/
     cd ~/docker/xui/
     docker-compose up -d
+    echo "https://$DOMAIN1:54321"
+    echo "UN: admin"
+    echo "PW: admin"
 }
 
 install_namizun() {
