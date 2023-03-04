@@ -73,7 +73,7 @@ install_xui() {
 install_nginx() {
     apt install nginx -y
     cp x-ui.conf /etc/nginx/sites-available/x-ui.conf
-    
+    ln -s /etc/nginx/site-available/ ~/docker/xui/
 }
 
 config_web_panel() {
