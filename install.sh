@@ -1,8 +1,8 @@
 #!/bin/bash
 
 CERTBOT_EMAIL="email@example.com"
-DOMAIN1="ray.example.com"
-DOMAIN2="rayc.example.com"
+DOMAIN="ray.example.com"
+DOMAIN_CDN="cdn.example.com"
 SSHPROXY="user@example.com"
 OCSERVUSER="name"
 
@@ -59,9 +59,9 @@ server_initial_setup() {
 install_ssl() {
     mkdir -p ~/docker/xui/
     apt install certbot docker.io docker-compose -y
-    certbot certonly --email $CERTBOT_EMAIL -d $DOMAIN1 -d $DOMAIN2 --standalone --agree-tos --redirect --noninteractive
-    ln -s /etc/letsencrypt/live/$DOMAIN1/fullchain.pem ~/docker/xui/
-    ln -s /etc/letsencrypt/live/$DOMAIN1/privkey.pem ~/docker/xui/
+    certbot certonly --email $CERTBOT_EMAIL -d $DOMAIN -d $DOMAIN_CDN --standalone --agree-tos --redirect --noninteractive
+    ln -s /etc/letsencrypt/live/$DOMAIN/fullchain.pem ~/docker/xui/
+    ln -s /etc/letsencrypt/live/$DOMAIN/privkey.pem ~/docker/xui/
 }
 
 install_xui() {
@@ -72,23 +72,23 @@ install_xui() {
 
 install_nginx() {
     apt install nginx -y
-    cp x-ui.conf /etc/nginx/sites-available/x-ui.conf
+    cp $PROJECT_PATH/x-ui.conf /etc/nginx/sites-available/x-ui.conf
     ln -s /etc/nginx/site-available/x-ui.conf /etc/nginx/site-enabled/
-    xnginx -t
+    nginx -t
     service nginx restart
 }
 
 config_web_panel() {
-    echo "Panel: https://$DOMAIN1:54321"
+    echo "Panel: https://$DOMAIN:54321"
     echo "UN: admin"
     echo "PW: admin"
-    echo "Change password to `apg -n 1 -a 0`"
-    echo ""
-    echo "Add Inbound Setting:"
+    echo "Panel Setting -> Panel Configuration -> Change port to 7701"
+    echo "Panel Setting -> User Setting -> Change password to `apg -n 1 -a 0`"
+    echo "Panel Setting -> Other Setting -> Change timezone to Asia/Tehran"
+    echo "======================"
+    echo "Add Inbound Setting: (VLESS + VMESS)"
     echo "Enable: On"
-    echo "Protocol: vless"
     echo "Listening IP: EMPTY"
-    echo "Port: 2087"
     echo "Total Traffic(GB): 0"
     echo "Transmission: ws"
     echo "acceptProxyProtocol: Off"
@@ -99,6 +99,23 @@ config_web_panel() {
     echo "Certificate.crt file path: /root/tls/fullchain.pem"
     echo "Private.key file path: /root/tls/privkey.pem"
     echo "sniffing: On"
+    echo "======================"
+    echo "Add Inbound Setting: (VLESS)"
+    echo "Protocol: vless"
+    echo "Port: 2087"
+    echo "======================"
+    echo "Add Inbound Setting: (VMESS)"
+    echo "Protocol: vmess"
+    echo "Port: 2083"
+    echo "Disable insecure encryption: Off"
+}
+
+setup_arvan_cdn() {
+    echo "Add the following DNS record to ArvanCloud:"
+    echo "Type: CNAME From: $DOMAIN_CDN Value: $DOMAIN Protocol: Default"
+    echo "Turn CDN On"
+    echo "HTTPS Settings: Enable + Wait till certificate get released"
+    echo "HTTPS Protocol: Automatic"
 }
 
 install_ocserv() {
@@ -117,8 +134,8 @@ install_ocserv() {
     rm -rf ocserv-1.1.6/ ocserv-1.1.6.tar.xz
     ocpasswd -c /etc/ocserv/ocpasswd $OCSERVUSER
     cp $PROJECT_PATH/ocserv.conf /etc/ocserv/ocserv.conf
-    echo "server-cert = /etc/letsencrypt/live/$DOMAIN1/fullchain.pem" >> /etc/ocserv/ocserv.conf
-    echo "server-key = /etc/letsencrypt/live/$DOMAIN1/privkey.pem" >> /etc/ocserv/ocserv.conf
+    echo "server-cert = /etc/letsencrypt/live/$DOMAIN/fullchain.pem" >> /etc/ocserv/ocserv.conf
+    echo "server-key = /etc/letsencrypt/live/$DOMAIN/privkey.pem" >> /etc/ocserv/ocserv.conf
     cp $PROJECT_PATH/ocserv.service /lib/systemd/system/ocserv.service
     sudo systemctl daemon-reload
     sudo systemctl start ocserv
@@ -146,6 +163,7 @@ ACTIONS=(
     install_xui
     install_nginx
     config_web_panel
+    setup_arvan_cdn
     install_ocserv
     setup_ocserv_iptables
     install_namizun
