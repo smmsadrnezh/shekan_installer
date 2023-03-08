@@ -6,7 +6,7 @@ Download the scripts:
 
 ```
 git clone https://github.com/smmsadrnezh/shekan_installer.git
-cd shekan_insaller
+cd shekan_installer
 ```
 
 Edit configuration:
