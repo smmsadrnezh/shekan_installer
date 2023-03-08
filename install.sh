@@ -53,36 +53,36 @@ setup_dns() {
 }
 
 server_initial_setup() {
-    ln -fs /usr/share/zoneinfo/Asia/Tehran /etc/localtime
-    dpkg-reconfigure -f noninteractive tzdata
-    apt update -y
-    apt upgrade -y
-    apt dist-upgrade -y
-    apt autoremove -y
-    sleep 5
-    reboot
+    echo_run "ln -fs /usr/share/zoneinfo/Asia/Tehran /etc/localtime"
+    echo_run "dpkg-reconfigure -f noninteractive tzdata"
+    echo_run "apt update -y"
+    echo_run "apt upgrade -y"
+    echo_run "apt dist-upgrade -y"
+    echo_run "apt autoremove -y"
+    echo_run "sleep 5"
+    echo_run "reboot"
 }
 
 install_ssl() {
-    mkdir -p ~/docker/xui/
-    apt install certbot docker.io docker-compose -y
-    certbot certonly --email $CERTBOT_EMAIL -d $DOMAIN -d $DOMAIN_CDN --standalone --agree-tos --redirect --noninteractive
-    ln -s /etc/letsencrypt/live/$DOMAIN/fullchain.pem ~/docker/xui/
-    ln -s /etc/letsencrypt/live/$DOMAIN/privkey.pem ~/docker/xui/
+    echo_run "mkdir -p ~/docker/xui/"
+    echo_run "apt install certbot docker.io docker-compose -y"
+    echo_run "certbot certonly --email $CERTBOT_EMAIL -d $DOMAIN -d $DOMAIN_CDN --standalone --agree-tos --redirect --noninteractive"
+    echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/fullchain.pem ~/docker/xui/"
+    echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/privkey.pem ~/docker/xui/"
 }
 
 install_xui() {
-    cp $PROJECT_PATH/docker-compose.yaml ~/docker/xui/
-    cd ~/docker/xui/
-    docker-compose up -d
+    echo_run "cp $PROJECT_PATH/docker-compose.yaml ~/docker/xui/"
+    echo_run "cd ~/docker/xui/"
+    echo_run "docker-compose up -d"
 }
 
 install_nginx() {
-    apt install nginx -y
-    cp $PROJECT_PATH/x-ui.conf /etc/nginx/sites-available/x-ui.conf
-    ln -s /etc/nginx/site-available/x-ui.conf /etc/nginx/site-enabled/
-    nginx -t
-    service nginx restart
+    echo_run "apt install nginx -y"
+    echo_run "cp $PROJECT_PATH/x-ui.conf /etc/nginx/sites-available/x-ui.conf"
+    echo_run "ln -s /etc/nginx/site-available/x-ui.conf /etc/nginx/site-enabled/"
+    echo_run "nginx -t"
+    echo_run "service nginx restart"
 }
 
 config_web_panel() {
@@ -124,42 +124,42 @@ setup_arvan_cdn() {
 }
 
 install_ocserv() {
-    apt install build-essential pkg-config nettle-dev gnutls-bin libgnutls28-dev libprotobuf-c1 libev-dev libreadline-dev -y
-    apt autoremove -y
-    echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
-    sysctl -p
-    mkdir /etc/ocserv
-    certtool --generate-dh-params --outfile /etc/ocserv/dh.pem
-    cd /tmp
-    wget https://www.infradead.org/ocserv/download/ocserv-1.1.6.tar.xz
-    tar xvf ocserv-1.1.6.tar.xz
-    cd ocserv-1.1.6/
-    ./configure --sysconfdir=/etc/ && make && make install
-    cd $PROJECT_PATH
-    rm -rf ocserv-1.1.6/ ocserv-1.1.6.tar.xz
-    ocpasswd -c /etc/ocserv/ocpasswd $OCSERVUSER
-    cp $PROJECT_PATH/ocserv.conf /etc/ocserv/ocserv.conf
-    echo "server-cert = /etc/letsencrypt/live/$DOMAIN/fullchain.pem" >> /etc/ocserv/ocserv.conf
-    echo "server-key = /etc/letsencrypt/live/$DOMAIN/privkey.pem" >> /etc/ocserv/ocserv.conf
-    cp $PROJECT_PATH/ocserv.service /lib/systemd/system/ocserv.service
-    sudo systemctl daemon-reload
-    sudo systemctl start ocserv
-    sudo systemctl enable ocserv
+    echo_run "apt install build-essential pkg-config nettle-dev gnutls-bin libgnutls28-dev libprotobuf-c1 libev-dev libreadline-dev -y"
+    echo_run "apt autoremove -y"
+    echo_run 'echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf'
+    echo_run "sysctl -p"
+    echo_run "mkdir /etc/ocserv"
+    echo_run "certtool --generate-dh-params --outfile /etc/ocserv/dh.pem"
+    echo_run "cd /tmp"
+    echo_run "wget https://www.infradead.org/ocserv/download/ocserv-1.1.6.tar.xz"
+    echo_run "tar xvf ocserv-1.1.6.tar.xz"
+    echo_run "cd ocserv-1.1.6/"
+    echo_run "./configure --sysconfdir=/etc/ && make && make install"
+    echo_run "cd $PROJECT_PATH"
+    echo_run "rm -rf ocserv-1.1.6/ ocserv-1.1.6.tar.xz"
+    echo_run "ocpasswd -c /etc/ocserv/ocpasswd $OCSERVUSER"
+    echo_run "cp $PROJECT_PATH/ocserv.conf /etc/ocserv/ocserv.conf"
+    echo_run 'echo "server-cert = /etc/letsencrypt/live/$DOMAIN/fullchain.pem" >> /etc/ocserv/ocserv.conf'
+    echo_run 'echo "server-key = /etc/letsencrypt/live/$DOMAIN/privkey.pem" >> /etc/ocserv/ocserv.conf'
+    echo_run "cp $PROJECT_PATH/ocserv.service /lib/systemd/system/ocserv.service"
+    echo_run "sudo systemctl daemon-reload"
+    echo_run "sudo systemctl start ocserv"
+    echo_run "sudo systemctl enable ocserv"
 }
 
 setup_ocserv_iptables() {
-    iptables -A FORWARD -s 172.16.0.0/255.240.0.0 -j ACCEPT
-    iptables -A FORWARD -s 10.0.0.0/255.0.0.0 -j ACCEPT
-    iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
-    iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-    iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS  --clamp-mss-to-pmtu
-    apt install iptables-persistent -y
+    echo_run "iptables -A FORWARD -s 172.16.0.0/255.240.0.0 -j ACCEPT"
+    echo_run "iptables -A FORWARD -s 10.0.0.0/255.0.0.0 -j ACCEPT"
+    echo_run "iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT"
+    echo_run "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
+    echo_run "iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS  --clamp-mss-to-pmtu"
+    echo_run "apt install iptables-persistent -y"
 }
 
 install_namizun() {
-    apt install proxychains -y
-    ssh -NfD 9050 $SSHPROXY
-    sudo curl https://raw.githubusercontent.com/malkemit/namizun/master/else/setup.sh | sudo proxychains bash
+    echo_run "apt install proxychains -y"
+    echo_run "ssh -NfD 9050 $SSHPROXY"
+    echo_run "sudo curl https://raw.githubusercontent.com/malkemit/namizun/master/else/setup.sh | sudo proxychains bash"
 }
 
 ACTIONS=(
