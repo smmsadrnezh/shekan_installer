@@ -45,6 +45,13 @@ echo_run() {
 
 # ACTION FUNCTIONS
 
+setup_dns() {
+    echo "Add the following DNS record:"
+    echo "Type: A From: $DOMAIN Value: Your IP"
+    echo "Add the following DNS record to ArvanCloud:"
+    echo "Type: CNAME From: $DOMAIN_CDN Value: $DOMAIN Protocol: Default"
+}
+
 server_initial_setup() {
     ln -fs /usr/share/zoneinfo/Asia/Tehran /etc/localtime
     dpkg-reconfigure -f noninteractive tzdata
@@ -111,8 +118,6 @@ config_web_panel() {
 }
 
 setup_arvan_cdn() {
-    echo "Add the following DNS record to ArvanCloud:"
-    echo "Type: CNAME From: $DOMAIN_CDN Value: $DOMAIN Protocol: Default"
     echo "Turn CDN On"
     echo "HTTPS Settings: Enable + Wait till certificate get released"
     echo "HTTPS Protocol: Automatic"
@@ -158,6 +163,7 @@ install_namizun() {
 }
 
 ACTIONS=(
+    setup_dns
     server_initial_setup
     install_ssl
     install_xui
