@@ -5,7 +5,7 @@ Scripts to deploy v2ray and OcServ on Ubuntu
 Download the scripts:
 
 ```
-git clone https://github.com/smmsadrnezh/shekan_insaller.git
+git clone https://github.com/smmsadrnezh/shekan_installer.git
 cd shekan_insaller
 ```
 
