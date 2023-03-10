@@ -89,6 +89,7 @@ config_web_panel() {
     echo "Panel: https://`curl -s ifconfig.me`:54321"
     echo "UN: admin"
     echo "PW: admin"
+    echo "Change xray Status to its latest version"
     echo "Panel Setting -> Panel Configuration -> Change port to 7701"
     echo "Panel Setting -> Panel Configuration -> Panel certificate public key file path: /root/cert/cert.crt"
     echo "Panel Setting -> Panel Configuration -> Panel certificate key file path: /root/cert/private.key"
