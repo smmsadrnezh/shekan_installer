@@ -86,12 +86,16 @@ install_nginx() {
 }
 
 config_web_panel() {
-    echo "Panel: https://$DOMAIN:54321"
+    echo "Panel: https://`curl -s ifconfig.me`:54321"
     echo "UN: admin"
     echo "PW: admin"
     echo "Panel Setting -> Panel Configuration -> Change port to 7701"
+    echo "Panel Setting -> Panel Configuration -> Panel certificate public key file path: /root/cert/cert.crt"
+    echo "Panel Setting -> Panel Configuration -> Panel certificate key file path: /root/cert/private.key"
     echo "Panel Setting -> User Setting -> Change password to `apg -n 1 -a 0`"
     echo "Panel Setting -> Other Setting -> Change timezone to Asia/Tehran"
+    echo "Save and Restart"
+    echo "Open panel at https://$DOMAIN:7071"
     echo "======================"
     echo "Add Inbound Setting: (VLESS + VMESS)"
     echo "Enable: On"
@@ -115,6 +119,10 @@ config_web_panel() {
     echo "Protocol: vmess"
     echo "Port: 2083"
     echo "Disable insecure encryption: Off"
+    echo "======================"
+    echo "Add a user and add scan the QR Code"
+    echo "Duplicate the profile"
+    echo "In the second profile replace $DOMAIN with $DOMAIN_CDN and 2087 with 443"
 }
 
 setup_arvan_cdn() {
