@@ -47,7 +47,7 @@ echo_run() {
 
 setup_dns() {
     echo "Add the following DNS record:"
-    echo "Type: A From: $DOMAIN Value: Your IP"
+    echo "Type: A From: $DOMAIN Value: `curl -s ifconfig.me`"
     echo "Add the following DNS record to ArvanCloud:"
     echo "Type: CNAME From: $DOMAIN_CDN Value: $DOMAIN Protocol: Default"
 }
