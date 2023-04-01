@@ -96,7 +96,7 @@ config_web_panel() {
     echo "Panel Setting -> User Setting -> Change password to `apg -n 1 -a 0`"
     echo "Panel Setting -> Other Setting -> Change timezone to Asia/Tehran"
     echo "Save and Restart"
-    echo "Open panel at https://$DOMAIN:7071"
+    echo "Open panel at https://$DOMAIN:7701"
     echo "======================"
     echo "Add Inbound Setting: (VLESS + VMESS)"
     echo "Enable: On"
