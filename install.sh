@@ -86,7 +86,7 @@ install_nginx() {
 }
 
 config_web_panel() {
-    echo "Panel: https://`curl -s ifconfig.me`:54321"
+    echo "Panel: http://`curl -s ifconfig.me`:54321"
     echo "UN: admin"
     echo "PW: admin"
     echo "Change xray Status to its latest version"
