@@ -41,7 +41,7 @@ echo_run() {
 
 function gcf() {
     export GCF_ED='$'
-    envsubst <$(gcfp $1)
+    envsubst <$1
 }
 
 # ACTION FUNCTIONS
