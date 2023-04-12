@@ -11,8 +11,8 @@ cd shekan_installer
 
 Edit configuration:
 ```
-nano install.sh
-nano x-ui.conf
+cp .env.sample .env
+vim .env
 ```
 
 Run the installer:
