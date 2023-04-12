@@ -161,7 +161,7 @@ setup_ocserv_iptables() {
 
 install_nginx() {
     echo_run "apt install nginx -y"
-    echo_run "cp $PROJECT_PATH/x-ui.conf /etc/nginx/sites-available/x-ui.conf"
+    echo_run "gcf $PROJECT_PATH/x-ui.conf > /etc/nginx/sites-available/x-ui.conf"
     echo_run "ln -s /etc/nginx/site-available/x-ui.conf /etc/nginx/site-enabled/"
     echo_run "nginx -t"
     echo_run "service nginx restart"
