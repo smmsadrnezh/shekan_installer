@@ -12,7 +12,7 @@ cd shekan_installer
 Edit configuration:
 ```
 cp .env.sample .env
-vim .env
+nano .env
 ```
 
 Run the installer:
