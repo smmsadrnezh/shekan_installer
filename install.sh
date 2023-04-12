@@ -151,6 +151,11 @@ install_ocserv() {
     echo_run "sudo systemctl enable ocserv"
 }
 
+install_webmin() {
+    echo_run "sh <(curl -s https://raw.githubusercontent.com/webmin/webmin/master/setup-repos.sh)"
+    echo_run "apt install webmin -y"
+}
+
 setup_ocserv_iptables() {
     echo_run "iptables -A FORWARD -s 172.16.0.0/255.240.0.0 -j ACCEPT"
     echo_run "iptables -A FORWARD -s 10.0.0.0/255.0.0.0 -j ACCEPT"
