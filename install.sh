@@ -161,6 +161,7 @@ setup_ocserv_iptables() {
 
 install_nginx() {
     echo_run "apt install nginx python3-certbot-nginx -y"
+    echo_run "certbot --nginx -d $DOMAIN --noninteractive"
     echo_run "systemctl restart nginx"
 }
 
