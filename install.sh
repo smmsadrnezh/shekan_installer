@@ -177,11 +177,12 @@ ACTIONS=(
     server_initial_setup
     install_ssl
     install_xui
-    install_nginx
     config_web_panel
     setup_arvan_cdn
     install_ocserv
+    install_webmin
     setup_ocserv_iptables
+    install_nginx
     install_namizun
 )
 
