@@ -1,10 +1,6 @@
 #!/bin/bash
 
-CERTBOT_EMAIL="email@example.com"
-DOMAIN="ray.example.com"
-DOMAIN_CDN="cdn.example.com"
-SSHPROXY="user@example.com"
-OCSERVUSER="name"
+source .env
 
 # SCRIPT SETUP
 
@@ -41,6 +37,11 @@ echo_run() {
     fi
     print_separator "+"
     echo -e "\n"
+}
+
+function gcf() {
+    export GCF_ED='$'
+    envsubst <$(gcfp $1)
 }
 
 # ACTION FUNCTIONS
