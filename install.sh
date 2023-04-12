@@ -107,7 +107,7 @@ config_web_panel() {
     echo "transmission: tcp"
     echo "======================"
     echo "Add Inbound Setting: (VLESS + VMESS)(ws + tls)"
-    echo "remark: `echo $DOMAIN | cut -d '.' -f1`-d"
+    echo "remark: `echo $DOMAIN | cut -d '.' -f1`-dt"
     echo "protocol: vless or vmess"
     echo "port: 2087"
     echo "transmission: ws"
