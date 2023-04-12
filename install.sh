@@ -78,14 +78,6 @@ install_xui() {
     echo_run "docker-compose up -d"
 }
 
-install_nginx() {
-    echo_run "apt install nginx -y"
-    echo_run "cp $PROJECT_PATH/x-ui.conf /etc/nginx/sites-available/x-ui.conf"
-    echo_run "ln -s /etc/nginx/site-available/x-ui.conf /etc/nginx/site-enabled/"
-    echo_run "nginx -t"
-    echo_run "service nginx restart"
-}
-
 config_web_panel() {
     echo "Panel: http://`curl -s ifconfig.me`:54321"
     echo "UN: admin"
@@ -154,6 +146,7 @@ install_ocserv() {
 install_webmin() {
     echo_run "sh <(curl -s https://raw.githubusercontent.com/webmin/webmin/master/setup-repos.sh)"
     echo_run "apt install webmin -y"
+    echo "Panel: https://$DOMAIN:10000"
 }
 
 setup_ocserv_iptables() {
@@ -163,6 +156,14 @@ setup_ocserv_iptables() {
     echo_run "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
     echo_run "iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS  --clamp-mss-to-pmtu"
     echo_run "apt install iptables-persistent -y"
+}
+
+install_nginx() {
+    echo_run "apt install nginx -y"
+    echo_run "cp $PROJECT_PATH/x-ui.conf /etc/nginx/sites-available/x-ui.conf"
+    echo_run "ln -s /etc/nginx/site-available/x-ui.conf /etc/nginx/site-enabled/"
+    echo_run "nginx -t"
+    echo_run "service nginx restart"
 }
 
 install_namizun() {
