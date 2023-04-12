@@ -197,6 +197,8 @@ ACTIONS=(
     install_webmin
     setup_ocserv_iptables
     install_nginx
+    install_nginx_xui
+    install_nginx_webmin
     install_namizun
 )
 
