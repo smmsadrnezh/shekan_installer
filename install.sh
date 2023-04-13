@@ -190,8 +190,8 @@ ACTIONS=(
     config_web_panel
     setup_arvan_cdn
     install_ocserv
-    install_webmin
     setup_ocserv_iptables
+    install_webmin
     install_nginx
     install_nginx_xui
     install_nginx_webmin
