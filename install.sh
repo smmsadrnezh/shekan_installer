@@ -134,7 +134,7 @@ install_ocserv() {
     echo_run "./configure --sysconfdir=/etc/ && make && make install"
     echo_run "cd $PROJECT_PATH"
     echo_run "rm -rf ocserv-1.1.6/ ocserv-1.1.6.tar.xz"
-    echo_run "ocpasswd -c /etc/ocserv/ocpasswd $OCSERVUSER"
+    # echo_run "ocpasswd -c /etc/ocserv/ocpasswd $OCSERVUSER"
     echo_run "cp $PROJECT_PATH/ocserv.conf /etc/ocserv/ocserv.conf"
     echo_run 'echo "server-cert = /etc/letsencrypt/live/$DOMAIN/fullchain.pem" >> /etc/ocserv/ocserv.conf'
     echo_run 'echo "server-key = /etc/letsencrypt/live/$DOMAIN/privkey.pem" >> /etc/ocserv/ocserv.conf'
