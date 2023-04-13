@@ -150,7 +150,7 @@ install_webmin() {
     echo "Panel: https://$DOMAIN:10000"
     echo "Login to Webmin panel as root"
     echo "Go to [Webmin → Webmin Configuration → SSL Encryption]"
-    echo "In SSL Settings tab"
+    echo "In SSL Settings tab:"
     echo "Set [Private key file] to /etc/letsencrypt/live/$DOMAIN/privkey.pem"
     echo "Set [Certificate file] to Separate file and set to /etc/letsencrypt/live/$DOMAIN/cert.pem"
 }
