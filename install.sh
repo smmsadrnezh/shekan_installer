@@ -121,27 +121,17 @@ setup_arvan_cdn() {
 }
 
 install_ocserv() {
-    echo_run "apt install build-essential pkg-config nettle-dev gnutls-bin libgnutls28-dev libprotobuf-c1 libev-dev libreadline-dev -y"
-    echo_run "apt autoremove -y"
+    if [ "`lsb_release -r | cut -f2`" != "22.10" ]; then
+        echo "Ubuntu version should be >= 22.10"
+        return
+    fi
     echo_run 'echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf'
     echo_run "sysctl -p"
-    echo_run "mkdir /etc/ocserv"
     echo_run "certtool --generate-dh-params --outfile /etc/ocserv/dh.pem"
-    echo_run "cd /tmp"
-    echo_run "wget https://www.infradead.org/ocserv/download/ocserv-1.1.6.tar.xz"
-    echo_run "tar xvf ocserv-1.1.6.tar.xz"
-    echo_run "cd ocserv-1.1.6/"
-    echo_run "./configure --sysconfdir=/etc/ && make && make install"
-    echo_run "cd $PROJECT_PATH"
-    echo_run "rm -rf ocserv-1.1.6/ ocserv-1.1.6.tar.xz"
-    # echo_run "ocpasswd -c /etc/ocserv/ocpasswd $OCSERVUSER"
+    echo_run "apt install ocserv -y"
     echo_run "cp $PROJECT_PATH/ocserv.conf /etc/ocserv/ocserv.conf"
     echo_run 'echo "server-cert = /etc/letsencrypt/live/$DOMAIN/fullchain.pem" >> /etc/ocserv/ocserv.conf'
     echo_run 'echo "server-key = /etc/letsencrypt/live/$DOMAIN/privkey.pem" >> /etc/ocserv/ocserv.conf'
-    echo_run "cp $PROJECT_PATH/ocserv.service /lib/systemd/system/ocserv.service"
-    echo_run "sudo systemctl daemon-reload"
-    echo_run "sudo systemctl start ocserv"
-    echo_run "sudo systemctl enable ocserv"
 }
 
 install_webmin() {
