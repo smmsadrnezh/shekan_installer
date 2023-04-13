@@ -148,6 +148,11 @@ install_webmin() {
     echo_run "sh <(curl -s https://raw.githubusercontent.com/webmin/webmin/master/setup-repos.sh)"
     echo_run "apt install webmin -y"
     echo "Panel: https://$DOMAIN:10000"
+    echo "Login to Webmin panel as root"
+    echo "Go to [Webmin → Webmin Configuration → SSL Encryption]"
+    echo "In SSL Settings"
+    echo "Set [Private key file] to /etc/letsencrypt/live/$DOMAIN/privkey.pem"
+    echo "Set [Certificate file] to Separate file and set to /etc/letsencrypt/live/$DOMAIN/cert.pem"
 }
 
 setup_ocserv_iptables() {
