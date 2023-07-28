@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  panel:
+    image: lovechen/3x-ui:latest
+    restart: unless-stopped
+    volumes:
+        - ./fullchain.pem:/root/cert/cert.crt:ro
+        - ./privkey.pem:/root/cert/private.key:ro
+        - ./db/:/etc/x-ui/
+    network_mode: "host"

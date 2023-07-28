@@ -1,6 +1,19 @@
 #!/bin/bash
 
+if [ ! -f ".env" ]; then
+    echo ".env file does not exist."
+    exit
+fi
+
+if ! grep -q "NEW_PASSWORD=" .env;then
+    echo "export NEW_PASSWORD=\"`tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo ''`\"" >> .env
+fi
+
 source .env
+
+# Varibales
+export PUBLIC_IP=`curl -s ifconfig.me`
+export REMARK_PREFIX=`echo $DOMAIN | cut -d '.' -f1`
 
 # SCRIPT SETUP
 
@@ -48,9 +61,14 @@ function gcf() {
 
 setup_dns() {
     echo "Add the following DNS record:"
-    echo "Type: A From: $DOMAIN Value: `curl -s ifconfig.me`"
-    echo "Add the following DNS record to ArvanCloud:"
-    echo "Type: CNAME From: $DOMAIN_CDN Value: $DOMAIN Protocol: Default"
+    echo -e "\tType: A"
+    echo -e "\tFrom: $DOMAIN"
+    echo -e "\tValue: $PUBLIC_IP"
+    echo -e "Add the following DNS record to ArvanCloud:"
+    echo -e "\tType: CNAME"
+    echo -e "\tFrom: $DOMAIN_CDN"
+    echo -e "\tValue: $DOMAIN"
+    echo -e "\tProtocol: Default"
 }
 
 server_initial_setup() {
@@ -58,60 +76,40 @@ server_initial_setup() {
     echo_run "dpkg-reconfigure -f noninteractive tzdata"
     echo_run "apt update -y"
     echo_run "apt install -y apg"
-    echo_run "apt upgrade -y"
-    echo_run "apt dist-upgrade -y"
+    echo_run "apt full-upgrade -y"
     echo_run "apt autoremove -y"
     echo_run "sleep 5"
     echo_run "reboot"
 }
 
-install_ssl() {
-    echo_run "mkdir -p ~/docker/xui/"
-    echo_run "apt install certbot docker.io docker-compose -y"
-    echo_run "certbot certonly --email $CERTBOT_EMAIL -d $DOMAIN -d $DOMAIN_CDN --standalone --agree-tos --redirect --noninteractive"
-    echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/fullchain.pem ~/docker/xui/"
-    echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/privkey.pem ~/docker/xui/"
+server_upgrade_release() {
+    echo_run "sed -i -e 's/Prompt=lts/Prompt=nomral/g' /etc/update-manager/release-upgrades"
+    echo_run "do-release-upgrade"
 }
 
-install_xui() {
-    echo_run "cp $PROJECT_PATH/docker-compose.yaml ~/docker/xui/"
+install_ssl() {
+    echo_run "apt install certbot docker.io docker-compose -y"
+    echo_run "certbot certonly --email $CERTBOT_EMAIL -d $DOMAIN -d $DOMAIN_CDN --standalone --agree-tos --redirect --noninteractive"
+}
+
+install_3x-ui() {
+    echo_run "mkdir -p ~/docker/3x-ui/"
+    echo_run "cd ~/docker/3x-ui/"
+    echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
+    echo_run "cp $PROJECT_PATH/configs/3x-ui/docker-compose.yml ."
+    echo_run "docker-compose up -d"
+}
+
+install_xui_legacy() {
+    echo_run "mkdir -p ~/docker/xui/"
     echo_run "cd ~/docker/xui/"
+    echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
+    echo_run "cp $PROJECT_PATH/configs/x-ui/docker-compose.yaml ."
     echo_run "docker-compose up -d"
 }
 
 config_web_panel() {
-    echo "Panel: http://`curl -s ifconfig.me`:54321"
-    echo "UN: admin"
-    echo "PW: admin"
-    echo "Change "xray Status" to its latest version"
-    echo "Panel Setting -> Panel Configuration -> Change port to 7701"
-    echo "Panel Setting -> Panel Configuration -> Panel certificate public key file path: /root/cert/cert.crt"
-    echo "Panel Setting -> Panel Configuration -> Panel certificate key file path: /root/cert/private.key"
-    echo "Panel Setting -> User Setting -> Change password to `apg -n 1 -a 0`"
-    echo "Panel Setting -> Other Setting -> Change timezone to Asia/Tehran"
-    echo "Save and Restart"
-    echo "Open panel at https://$DOMAIN:7701"
-    echo "======================"
-    echo "Add Inbound Setting: (VLESS + VMESS)(tcp + no-tls)"
-    echo "remark: `echo $DOMAIN | cut -d '.' -f1`-d"
-    echo "enable: On"
-    echo "protocol: vless or vmess"
-    echo "port: 2082"
-    echo "transmission: tcp"
-    echo "======================"
-    echo "Add Inbound Setting: (VLESS + VMESS)(ws + tls)"
-    echo "remark: `echo $DOMAIN | cut -d '.' -f1`-dt"
-    echo "protocol: vless or vmess"
-    echo "port: 2087"
-    echo "transmission: ws"
-    echo "tls: On"
-    echo "public key file path: /root/cert/cert.crt"
-    echo "key file path: /root/cert/private.key"
-    echo "======================"
-    echo "Add a user and add scan the QR Code for inbounds"
-    echo "For ws only:"
-    echo "Duplicate the profile"
-    echo "In the second profile replace $DOMAIN with $DOMAIN_CDN and 2087 with 443"
+    echo_run "gcf $PROJECT_PATH/v2ray_inbounds/v2ray.md"
 }
 
 setup_arvan_cdn() {
@@ -121,17 +119,27 @@ setup_arvan_cdn() {
 }
 
 install_ocserv() {
-    if [ "`lsb_release -r | cut -f2`" != "22.10" ]; then
-        echo "Ubuntu version should be >= 22.10"
-        return
-    fi
-    echo_run 'echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf'
-    echo_run "sysctl -p"
-    echo_run "certtool --generate-dh-params --outfile /etc/ocserv/dh.pem"
-    echo_run "apt install ocserv -y"
-    echo_run "cp $PROJECT_PATH/ocserv.conf /etc/ocserv/ocserv.conf"
-    echo_run 'echo "server-cert = /etc/letsencrypt/live/$DOMAIN/fullchain.pem" >> /etc/ocserv/ocserv.conf'
-    echo_run 'echo "server-key = /etc/letsencrypt/live/$DOMAIN/privkey.pem" >> /etc/ocserv/ocserv.conf'
+    echo_run "mkdir -p ~/docker/"
+    echo_run "cp -rf ./configs/ocserv ~/docker/"
+    echo_run "cd ~/docker/ocserv/"
+    echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
+    echo_run "docker-compose up -d"
+    echo "URL: $DOMAIN:8443"
+}
+
+
+install_ocserv_build() {
+    echo ''
+}
+
+
+setup_ocserv_iptables() {
+    echo_run "iptables -A FORWARD -s 172.16.0.0/255.240.0.0 -j ACCEPT"
+    echo_run "iptables -A FORWARD -s 10.0.0.0/255.0.0.0 -j ACCEPT"
+    echo_run "iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT"
+    echo_run "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
+    echo_run "iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS  --clamp-mss-to-pmtu"
+    echo_run "apt install iptables-persistent -y"
 }
 
 install_webmin() {
@@ -143,15 +151,6 @@ install_webmin() {
     echo "In SSL Settings tab:"
     echo "Set [Private key file] to /etc/letsencrypt/live/$DOMAIN/privkey.pem"
     echo "Set [Certificate file] to Separate file and set to /etc/letsencrypt/live/$DOMAIN/cert.pem"
-}
-
-setup_ocserv_iptables() {
-    echo_run "iptables -A FORWARD -s 172.16.0.0/255.240.0.0 -j ACCEPT"
-    echo_run "iptables -A FORWARD -s 10.0.0.0/255.0.0.0 -j ACCEPT"
-    echo_run "iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT"
-    echo_run "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
-    echo_run "iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS  --clamp-mss-to-pmtu"
-    echo_run "apt install iptables-persistent -y"
 }
 
 install_nginx() {
@@ -185,11 +184,14 @@ install_namizun() {
 ACTIONS=(
     setup_dns
     server_initial_setup
+    server_upgrade_release
     install_ssl
-    install_xui
+    install_3x-ui
+    install_xui_legacy
     config_web_panel
     setup_arvan_cdn
     install_ocserv
+    install_ocserv_build
     setup_ocserv_iptables
     install_webmin
     install_nginx
