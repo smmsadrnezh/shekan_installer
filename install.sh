@@ -215,6 +215,7 @@ install_nginx_xui() {
 
 install_nginx_webmin() {
     echo_run "echo 'referers=webmin.$DOMAIN' >> /etc/webmin/config"
+    echo_run "echo 'webprefixnoredir=1' >> /etc/webmin/config"
     echo_run "systemctl restart webmin.service"
     echo_run "gcf $PROJECT_CONFIGS/webmin/webmin.conf > /etc/nginx/sites-available/webmin.conf"
     echo_run "ln -s /etc/nginx/sites-available/webmin.conf /etc/nginx/sites-enabled/"
