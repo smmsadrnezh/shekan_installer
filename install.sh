@@ -20,6 +20,8 @@ export REMARK_PREFIX=`echo $DOMAIN | cut -d '.' -f1`
 export PROJECT_PATH="$(dirname $(realpath "$0"))"
 cd "$PROJECT_PATH" || exit
 
+export PROJECT_CONFIGS="$PROJECT_PATH/configs"
+
 if [ "$EUID" -ne 0 ]; then
     echo "Please run as root"
     exit
@@ -98,7 +100,7 @@ install_3x-ui() {
     echo_run "mkdir -p ~/docker/3x-ui/"
     echo_run "cd ~/docker/3x-ui/"
     echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
-    echo_run "cp $PROJECT_PATH/configs/3x-ui/docker-compose.yml ."
+    echo_run "cp $PROJECT_CONFIGS/3x-ui/docker-compose.yml ."
     echo_run "docker-compose up -d"
 }
 
@@ -106,7 +108,7 @@ install_xui_legacy() {
     echo_run "mkdir -p ~/docker/xui/"
     echo_run "cd ~/docker/xui/"
     echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
-    echo_run "cp $PROJECT_PATH/configs/x-ui/docker-compose.yaml ."
+    echo_run "cp $PROJECT_CONFIGS/x-ui/docker-compose.yaml ."
     echo_run "docker-compose up -d"
 }
 
@@ -123,7 +125,7 @@ setup_arvan_cdn() {
 install_ocserv() {
     echo_run "useradd -r -s /bin/false ocserv"
     echo_run "mkdir -p ~/docker/"
-    echo_run "cp -rf  $PROJECT_PATH/configs/ocserv ~/docker/"
+    echo_run "cp -rf  $PROJECT_CONFIGS/ocserv ~/docker/"
     echo_run "cd ~/docker/ocserv/"
     echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
     echo_run "docker-compose up -d"
@@ -147,10 +149,10 @@ install_ocserv_build() {
     echo_run "cd $PROJECT_PATH"
     echo_run "rm -rf ocserv-1.1.6/ ocserv-1.1.6.tar.xz"
     echo_run "ocpasswd -c /etc/ocserv/ocpasswd $OCSERVUSER"
-    echo_run "cp $PROJECT_PATH/ocserv.conf /etc/ocserv/ocserv.conf"
+    echo_run "cp $PROJECT_CONFIGS/ocserv.conf /etc/ocserv/ocserv.conf"
     echo_run "echo \"server-cert = /etc/letsencrypt/live/$DOMAIN/fullchain.pem\" >> /etc/ocserv/ocserv.conf"
     echo_run "echo \"server-key = /etc/letsencrypt/live/$DOMAIN/privkey.pem\" >> /etc/ocserv/ocserv.conf"
-    echo_run "cp $PROJECT_PATH/ocserv.service /lib/systemd/system/ocserv.service"
+    echo_run "cp $PROJECT_CONFIGS/ocserv.service /lib/systemd/system/ocserv.service"
     echo_run "sudo systemctl daemon-reload"
     echo_run "sudo systemctl start ocserv"
     echo_run "sudo systemctl enable ocserv"
@@ -185,7 +187,7 @@ install_nginx() {
 }
 
 install_nginx_xui() {
-    echo_run "gcf $PROJECT_PATH/x-ui.conf > /etc/nginx/sites-available/x-ui.conf"
+    echo_run "gcf $PROJECT_CONFIGS/x-ui/nginx > /etc/nginx/sites-available/x-ui.conf"
     echo_run "ln -s /etc/nginx/sites-available/x-ui.conf /etc/nginx/sites-enabled/"
     echo_run "certbot --nginx -d $DOMAIN -d $DOMAIN_CDN --noninteractive"
     echo_run "nginx -t"
@@ -193,7 +195,7 @@ install_nginx_xui() {
 }
 
 install_nginx_webmin() {
-    echo_run "gcf $PROJECT_PATH/webmin/webmin.conf > /etc/nginx/sites-available/webmin.conf"
+    echo_run "gcf $PROJECT_CONFIGS/webmin/webmin.conf > /etc/nginx/sites-available/webmin.conf"
     echo_run "ln -s /etc/nginx/sites-available/webmin.conf /etc/nginx/sites-enabled/"
     echo_run "certbot --nginx -d $DOMAIN -d webmin.$DOMAIN_CDN --noninteractive"
     echo_run "nginx -t"
