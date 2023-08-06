@@ -214,6 +214,8 @@ install_nginx_xui() {
 }
 
 install_nginx_webmin() {
+    echo_run "echo 'referers=webmin.$DOMAIN' >> /etc/webmin/config"
+    echo_run "systemctl restart webmin.service"
     echo_run "gcf $PROJECT_CONFIGS/webmin/webmin.conf > /etc/nginx/sites-available/webmin.conf"
     echo_run "ln -s /etc/nginx/sites-available/webmin.conf /etc/nginx/sites-enabled/"
     echo_run "certbot --nginx -d $DOMAIN -d webmin.$DOMAIN --noninteractive"
@@ -221,6 +223,7 @@ install_nginx_webmin() {
 
 install_nginx_usermin() {
     echo_run "echo 'referers=user.$DOMAIN' >> /etc/usermin/config"
+    echo_run "systemctl restart usermin.service"
     echo_run "gcf $PROJECT_CONFIGS/usermin/usermin.conf > /etc/nginx/sites-available/usermin.conf"
     echo_run "ln -s /etc/nginx/sites-available/usermin.conf /etc/nginx/sites-enabled/"
     echo_run "certbot --nginx -d $DOMAIN -d user.$DOMAIN --noninteractive"
