@@ -123,7 +123,7 @@ setup_arvan_cdn() {
 install_ocserv() {
     echo_run "useradd -r -s /bin/false ocserv"
     echo_run "mkdir -p ~/docker/"
-    echo_run "cp -rf ./configs/ocserv ~/docker/"
+    echo_run "cp -rf  $PROJECT_PATH/configs/ocserv ~/docker/"
     echo_run "cd ~/docker/ocserv/"
     echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
     echo_run "docker-compose up -d"
@@ -193,7 +193,7 @@ install_nginx_xui() {
 }
 
 install_nginx_webmin() {
-    echo_run "gcf $PROJECT_PATH/webmin.conf > /etc/nginx/sites-available/webmin.conf"
+    echo_run "gcf $PROJECT_PATH/webmin/webmin.conf > /etc/nginx/sites-available/webmin.conf"
     echo_run "ln -s /etc/nginx/sites-available/webmin.conf /etc/nginx/sites-enabled/"
     echo_run "certbot --nginx -d $DOMAIN -d webmin.$DOMAIN_CDN --noninteractive"
     echo_run "nginx -t"
