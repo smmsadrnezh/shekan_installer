@@ -75,16 +75,18 @@ server_initial_setup() {
     echo_run "ln -fs /usr/share/zoneinfo/Asia/Tehran /etc/localtime"
     echo_run "dpkg-reconfigure -f noninteractive tzdata"
     echo_run "apt update -y"
-    echo_run "apt install -y apg"
+    echo_run "apt install -y apg tmux vim net-tools"
     echo_run "apt full-upgrade -y"
     echo_run "apt autoremove -y"
     echo_run "sleep 5"
     echo_run "reboot"
 }
 
-server_upgrade_release() {
-    echo_run "sed -i -e 's/Prompt=lts/Prompt=nomral/g' /etc/update-manager/release-upgrades"
-    echo_run "do-release-upgrade"
+iptables_blacklist() {
+    echo_run "iptables -A OUTPUT -d 141.101.0.0/16 -j DROP"
+    echo_run "iptables -A OUTPUT -d 173.245.0.0/16 -j DROP"
+    echo_run "apt install iptables-persistent -y"
+    echo_run "invoke-rc.d netfilter-persistent save"
 }
 
 install_ssl() {
@@ -132,6 +134,7 @@ install_ocserv() {
 install_ocserv_build() {
     echo_run "apt install build-essential pkg-config nettle-dev gnutls-bin libgnutls28-dev libprotobuf-c1 libev-dev libreadline-dev -y"
     echo_run "apt autoremove -y"
+    echo_run "apt remove libpam-cap -y"
     echo_run 'echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf'
     echo_run "sysctl -p"
     echo_run "mkdir /etc/ocserv"
@@ -161,6 +164,7 @@ setup_ocserv_iptables() {
     echo_run "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
     echo_run "iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS  --clamp-mss-to-pmtu"
     echo_run "apt install iptables-persistent -y"
+    echo_run "invoke-rc.d netfilter-persistent save"
 }
 
 install_webmin() {
@@ -205,7 +209,6 @@ install_namizun() {
 ACTIONS=(
     setup_dns
     server_initial_setup
-    server_upgrade_release
     install_ssl
     install_3x-ui
     install_xui_legacy
