@@ -181,7 +181,7 @@ install_webmin() {
 }
 
 install_usermin() {
-    echo "Go to webmin panel"
+    echo "Go to webmin panel: https://$DOMAIN:10000"
     echo "From Un-used Modules select Usermin"
     echo "click install and wait to install"
     echo "Press enter to continue"
@@ -193,6 +193,11 @@ install_usermin() {
     echo "In SSL Settings:"
     echo "Set [Private key file] to /etc/letsencrypt/live/$DOMAIN/privkey.pem"
     echo "Set [Certificate file] to Separate file and set to /etc/letsencrypt/live/$DOMAIN/cert.pem"
+    echo "Go to [Webmin → Usermin Configuration → Module Restrictions]"
+    echo 'Select "Add a new user or group restriction"'
+    echo 'Click on "Members of group" and type "users"'
+    echo 'Select Change Password'
+    echo 'Click on "Create"'
     echo "Usermin Panel: https://$DOMAIN:20000"
 }
 
