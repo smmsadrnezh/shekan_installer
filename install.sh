@@ -180,6 +180,20 @@ install_webmin() {
     echo "Set [Certificate file] to Separate file and set to /etc/letsencrypt/live/$DOMAIN/cert.pem"
 }
 
+install_usermin() {
+    echo "Go to webmin panel"
+    echo "From Un-used Modules select Usermin"
+    echo "click install and wait to install"
+    echo "Press enter to continue"
+    echo_run "read"
+    echo_run "apt install usermin -y"
+    echo "Go to webmin panel"
+    echo "Login to Webmin panel as root"
+    echo "Go to [Webmin → Usermin Configuration → SSL Encryption]"
+    echo "In SSL Settings tab click on Copy Certificate From Webmin"
+    echo "Usermin Panel: https://$DOMAIN:20000"
+}
+
 install_nginx() {
     echo_run "apt install nginx python3-certbot-nginx -y"
     echo_run "certbot --nginx -d $DOMAIN --noninteractive"
