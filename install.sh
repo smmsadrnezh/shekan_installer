@@ -190,16 +190,12 @@ install_nginx_xui() {
     echo_run "gcf $PROJECT_CONFIGS/x-ui/nginx > /etc/nginx/sites-available/x-ui.conf"
     echo_run "ln -s /etc/nginx/sites-available/x-ui.conf /etc/nginx/sites-enabled/"
     echo_run "certbot --nginx -d $DOMAIN -d $DOMAIN_CDN --noninteractive"
-    echo_run "nginx -t"
-    echo_run "systemctl restart nginx"
 }
 
 install_nginx_webmin() {
     echo_run "gcf $PROJECT_CONFIGS/webmin/webmin.conf > /etc/nginx/sites-available/webmin.conf"
     echo_run "ln -s /etc/nginx/sites-available/webmin.conf /etc/nginx/sites-enabled/"
     echo_run "certbot --nginx -d $DOMAIN -d webmin.$DOMAIN --noninteractive"
-    echo_run "nginx -t"
-    echo_run "systemctl restart nginx"
 }
 
 install_namizun() {
