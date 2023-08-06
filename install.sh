@@ -220,6 +220,7 @@ install_nginx_webmin() {
 }
 
 install_nginx_usermin() {
+    echo_run "echo 'referers=user.$DOMAIN' >> /etc/usermin/config"
     echo_run "gcf $PROJECT_CONFIGS/usermin/usermin.conf > /etc/nginx/sites-available/usermin.conf"
     echo_run "ln -s /etc/nginx/sites-available/usermin.conf /etc/nginx/sites-enabled/"
     echo_run "certbot --nginx -d $DOMAIN -d user.$DOMAIN --noninteractive"
