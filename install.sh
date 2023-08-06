@@ -190,7 +190,9 @@ install_usermin() {
     echo "Go to webmin panel"
     echo "Login to Webmin panel as root"
     echo "Go to [Webmin → Usermin Configuration → SSL Encryption]"
-    echo "In SSL Settings tab click on Copy Certificate From Webmin"
+    echo "In SSL Settings:"
+    echo "Set [Private key file] to /etc/letsencrypt/live/$DOMAIN/privkey.pem"
+    echo "Set [Certificate file] to Separate file and set to /etc/letsencrypt/live/$DOMAIN/cert.pem"
     echo "Usermin Panel: https://$DOMAIN:20000"
 }
 
