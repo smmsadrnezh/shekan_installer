@@ -212,6 +212,12 @@ install_nginx_webmin() {
     echo_run "certbot --nginx -d $DOMAIN -d webmin.$DOMAIN --noninteractive"
 }
 
+install_nginx_usermin() {
+    echo_run "gcf $PROJECT_CONFIGS/webmin/usermin.conf > /etc/nginx/sites-available/usermin.conf"
+    echo_run "ln -s /etc/nginx/sites-available/webmin.conf /etc/nginx/sites-enabled/"
+    echo_run "certbot --nginx -d $DOMAIN -d user.$DOMAIN --noninteractive"
+}
+
 install_namizun() {
     echo_run "apt install proxychains -y"
     echo_run "ssh -NfD 9050 $SSHPROXY"
@@ -230,9 +236,11 @@ ACTIONS=(
     install_ocserv_build
     setup_ocserv_iptables
     install_webmin
+    install_usermin
     install_nginx
     install_nginx_xui
     install_nginx_webmin
+    install_nginx_usermin
     install_namizun
 )
 
