@@ -152,10 +152,11 @@ install_ocserv_build() {
     echo_run "cp $PROJECT_CONFIGS/ocserv.conf /etc/ocserv/ocserv.conf"
     echo_run "echo \"server-cert = /etc/letsencrypt/live/$DOMAIN/fullchain.pem\" >> /etc/ocserv/ocserv.conf"
     echo_run "echo \"server-key = /etc/letsencrypt/live/$DOMAIN/privkey.pem\" >> /etc/ocserv/ocserv.conf"
-    echo_run "cp $PROJECT_CONFIGS/ocserv.service /lib/systemd/system/ocserv.service"
-    echo_run "sudo systemctl daemon-reload"
-    echo_run "sudo systemctl start ocserv"
-    echo_run "sudo systemctl enable ocserv"
+    echo_run "echo \"auth = \"plain[/etc/ocserv/ocpasswd]\"\" >> /etc/ocserv/ocserv.conf"
+    echo_run "cp $PROJECT_CONFIGS/ocserv/ocserv.service /lib/systemd/system/ocserv.service"
+    echo_run "systemctl daemon-reload"
+    echo_run "systemctl start ocserv"
+    echo_run "systemctl enable ocserv"
 }
 
 
@@ -282,6 +283,23 @@ setup_firewall() {
     echo_run "ufw status verbose"
 }
 
+build_mtproxy() {
+    echo_run "git clone https://github.com/TelegramMessenger/MTProxy /opt/MTProxy"
+    echo_run "cd /opt/MTProxy"
+    echo_run "make && cd objs/bin"
+}
+
+run_mtproxy() {
+    echo_run "curl -s https://core.telegram.org/getProxySecret -o proxy-secret"
+    echo_run "curl -s https://core.telegram.org/getProxyConfig -o proxy-multi.conf"
+    echo_run "head -c 16 /dev/urandom | xxd -ps"
+    echo " /opt/MTProxy/objs/bin/mtproto-proxy -u nobody -p 8888 -H 9000 -S YOUR_SECRET --aes-pwd /opt/MTProxy/objs/bin/proxy-secret /opt/MTProxy/objs/bin/proxy-multi.conf -M 2"
+    echo_run "cp $PROJECT_CONFIGS/mtproxy/MTProxy.service /etc/systemd/system/MTProxy.service"
+    echo_run "systemctl daemon-reload"
+    echo_run "systemctl start MTProxy.service"
+    echo_run "systemctl enable MTProxy.service"
+}
+
 ACTIONS=(
     setup_dns
     server_initial_setup
@@ -302,6 +320,8 @@ ACTIONS=(
     install_namizun
     setup_fail2ban
     setup_firewall
+    build_mtproxy
+    run_mtproxy
 )
 
 # READ ACTIONS
