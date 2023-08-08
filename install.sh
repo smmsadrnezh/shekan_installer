@@ -246,7 +246,7 @@ install_nginx_webmin() {
     echo_run "systemctl restart webmin.service"
     echo_run "gcf $PROJECT_CONFIGS/webmin/webmin.conf > /etc/nginx/sites-available/webmin.conf"
     echo_run "ln -s /etc/nginx/sites-available/webmin.conf /etc/nginx/sites-enabled/"
-    echo_run "certbot --nginx -d $DOMAIN -d webmin.$DOMAIN --noninteractive"
+    echo_run "certbot --nginx -d $DOMAIN -d webmin.$DOMAIN --noninteractive --expand"
 }
 
 install_nginx_usermin() {
@@ -258,7 +258,7 @@ install_nginx_usermin() {
     echo_run "systemctl restart usermin.service"
     echo_run "gcf $PROJECT_CONFIGS/usermin/usermin.conf > /etc/nginx/sites-available/usermin.conf"
     echo_run "ln -s /etc/nginx/sites-available/usermin.conf /etc/nginx/sites-enabled/"
-    echo_run "certbot --nginx -d $DOMAIN -d user.$DOMAIN --noninteractive"
+    echo_run "certbot --nginx -d $DOMAIN -d user.$DOMAIN --noninteractive --expand"
 }
 
 install_namizun() {
