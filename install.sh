@@ -211,6 +211,8 @@ install_usermin() {
     echo_run "apt install usermin -y"
     echo "Go to webmin panel"
     echo "Login to Webmin panel as root"
+    echo "Go to [Webmin → Usermin Configuration]"
+    echo 'Click on "Start Usermin"'
     echo "Go to [Webmin → Usermin Configuration → SSL Encryption]"
     echo "In SSL Settings:"
     echo "Set [Private key file] to /etc/letsencrypt/live/$DOMAIN/privkey.pem"
