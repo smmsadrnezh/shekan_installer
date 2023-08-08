@@ -1,7 +1,7 @@
 ## Login
-Panel: http://$PUBLIC_IP:54321\
-UN: admin\
-PW: admin\
+Panel: http://$PUBLIC_IP:54321  
+UN: admin  
+PW: admin  
 ## Setup Panel Settings
 Change xray Status to its latest version
 Panel Setting -> Panel Configuration -> Change port to 7701
