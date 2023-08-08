@@ -264,6 +264,24 @@ install_namizun() {
     echo_run "sudo curl https://raw.githubusercontent.com/malkemit/namizun/master/else/setup.sh | sudo proxychains bash"
 }
 
+setup_fail2ban() {
+    echo_run "apt install fail2ban -y"
+    echo_run "cp $PROJECT_CONFIGS/jail/jail.local /etc/fail2ban/"
+    echo_run "systemctl restart fail2ban"
+    echo_run "sleep 1"
+    echo_run "fail2ban-client status"
+}
+
+setup_firewall() {
+    echo_run "ufw --force enable"
+    echo_run "ufw allow 22,80,443,8443,2052,2082,2053,2083,2087,2096,7701/tcp"
+    echo_run "ufw default deny incoming"
+    echo_run "ufw default allow outgoing"
+    echo_run "systemctl stop fail2ban"
+    echo_run "systemctl start fail2ban"
+    echo_run "ufw status verbose"
+}
+
 ACTIONS=(
     setup_dns
     server_initial_setup
@@ -282,6 +300,8 @@ ACTIONS=(
     install_nginx_webmin
     install_nginx_usermin
     install_namizun
+    setup_fail2ban
+    setup_firewall
 )
 
 # READ ACTIONS
