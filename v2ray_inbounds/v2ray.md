@@ -64,4 +64,4 @@ key file path: /root/cert/private.key
 Add a user and add scan the QR Code for inbounds
 For ws only:
 Duplicate the profile
-In the second profile replace $DOMAIN with $DOMAIN_CDN and x with 443
+In the second profile replace $DOMAIN with $DOMAIN_CDN and port with 443
