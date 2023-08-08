@@ -169,6 +169,27 @@ setup_ocserv_iptables() {
     echo_run "invoke-rc.d netfilter-persistent save"
 }
 
+backup_pam_users() {
+    echo_run "mkdir /root/move/"
+    echo_run "export UGIDLIMIT=500"
+    echo_run "awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/passwd > /root/move/passwd.mig"
+    echo_run "awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/group > /root/move/group.mig"
+    echo_run "awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534) {print $1}' /etc/passwd | tee - |egrep -f - /etc/shadow > /root/move/shadow.mig"
+    echo_run "cp /etc/gshadow /root/move/gshadow.mig"
+    echo_run "scp -r /root/move/* root@NEW_SERVER_IP_ADDRESS:/root/"
+}
+
+restore_pam_users() {
+    echo_run "mkdir /root/newsusers.bak"
+    echo_run "cp /etc/passwd /etc/shadow /etc/group /etc/gshadow /root/newsusers.bak"
+    echo_run "cat /root/passwd.mig >> /etc/passwd"
+    echo_run "cat /root/group.mig >> /etc/group"
+    echo_run "cat /root/shadow.mig >> /etc/shadow"
+    echo_run "cp /root/gshadow.mig /etc/gshadow"
+    echo_run "rm /root/{*.mig,newsusers.bak}"
+    echo_run "reboot"
+}
+
 install_webmin() {
     echo_run "sh <(curl -s https://raw.githubusercontent.com/webmin/webmin/master/setup-repos.sh)"
     echo_run "apt install webmin -y"
