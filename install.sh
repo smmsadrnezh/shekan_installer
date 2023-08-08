@@ -303,6 +303,7 @@ run_mtproxy() {
 ACTIONS=(
     setup_dns
     server_initial_setup
+    iptables_blacklist
     install_ssl
     install_3x-ui
     install_xui_legacy
