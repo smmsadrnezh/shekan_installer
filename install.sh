@@ -313,14 +313,15 @@ ACTIONS=(
     install_webmin
     install_usermin
     install_nginx
-    install_nginx_xui
     install_nginx_webmin
     install_nginx_usermin
+    
     # Old Methods
     install_xui_legacy
     setup_arvan_cdn
     install_ocserv_build
     setup_ocserv_iptables
+    install_nginx_xui
     install_namizun
     setup_fail2ban
     setup_firewall
