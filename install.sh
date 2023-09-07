@@ -111,6 +111,7 @@ install_tuic() {
     echo_run "cp $PROJECT_CONFIGS/tuic/* ."
     echo_run "gcf $PROJECT_CONFIGS/tuic/config.json > config.json"
     echo_run "docker-compose up -d --force-recreate --build"
+    echo "Use this config in NekoBox:"
     echo "tuic://$UUID:$PASSWORD@$DOMAIN:8585/?congestion_control=bbr&udp_relay_mode=native&alpn=h3%2Cspdy%2F3.1&allow_insecure=1#$REMARK_PREFIX-tuic"
 }
 
