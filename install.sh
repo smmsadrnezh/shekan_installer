@@ -103,8 +103,8 @@ install_tuic() {
     echo_run "mkdir -p ~/docker/tuic/"
     echo_run "cd ~/docker/tuic/"
     echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
-    UUID=$(uuidgen)
-    PASSWORD=$(
+    export UUID=$(uuidgen)
+    export PASSWORD=$(
         tr -dc A-Za-z0-9 </dev/urandom | head -c 13
         echo ''
     )
