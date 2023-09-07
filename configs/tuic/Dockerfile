@@ -7,4 +7,4 @@ RUN wget -O tuic https://github.com/EAimTY/tuic/releases/download/tuic-server-1.
 COPY config.json .
 COPY start.sh .
 RUN chmod +x start.sh
-ENTRYPOINT start.sh
+ENTRYPOINT /root/start.sh
