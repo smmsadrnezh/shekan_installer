@@ -96,6 +96,14 @@ install_ssl() {
     echo_run "certbot certonly --email $CERTBOT_EMAIL -d $DOMAIN -d $DOMAIN_CDN --standalone --agree-tos --redirect --noninteractive"
 }
 
+install_tuic() {
+    echo_run "mkdir -p ~/docker/tuic/"
+    echo_run "cd ~/docker/tuic/"
+    echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
+    echo_run "cp $PROJECT_CONFIGS/tuic/docker-compose.yml ."
+    echo_run "docker-compose up -d"
+}
+
 install_3x-ui() {
     echo_run "mkdir -p ~/docker/3x-ui/"
     echo_run "cd ~/docker/3x-ui/"
