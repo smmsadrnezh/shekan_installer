@@ -15,4 +15,7 @@ services:
       - "8585:443/udp"
       - "8585:443/tcp"
     restart: unless-stopped
-    privileged: true
+    securityContext:
+      privileged: true
+      capabilities:
+        add: ["NET_ADMIN", "NET_RAW", "BIND_SERVICE"]
