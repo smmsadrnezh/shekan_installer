@@ -108,8 +108,8 @@ install_tuic() {
         tr -dc A-Za-z0-9 </dev/urandom | head -c 13
         echo ''
     )
+    echo_run "cp $PROJECT_CONFIGS/tuic/* ."
     echo_run "gcf $PROJECT_CONFIGS/tuic/config.json > config.json"
-    echo_run "cp $PROJECT_CONFIGS/tuic/docker-compose.yml ."
     echo_run "docker-compose up -d"
 }
 
