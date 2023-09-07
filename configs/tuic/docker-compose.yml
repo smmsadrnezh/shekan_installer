@@ -8,7 +8,7 @@ services:
     image: tuic:latest
     container_name: tuic
     volumes:
-      - ./config.json:/root/config.json
+      - ./config.json:/root/config-org.json:ro
       - ./fullchain.pem:/root/cert/cert.crt:ro
       - ./privkey.pem:/root/cert/private.key:ro
     ports:
