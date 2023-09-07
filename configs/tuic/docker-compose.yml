@@ -12,6 +12,7 @@ services:
       - ./fullchain.pem:/root/cert/cert.crt:ro
       - ./privkey.pem:/root/cert/private.key:ro
     ports:
-      - "8585:443"
+      - "8585:443/udp"
+      - "8585:443/tcp"
     restart: unless-stopped
     privileged: true
