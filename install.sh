@@ -110,7 +110,7 @@ install_tuic() {
     )
     echo_run "cp $PROJECT_CONFIGS/tuic/* ."
     echo_run "gcf $PROJECT_CONFIGS/tuic/config.json > config.json"
-    echo_run "docker-compose up -d --force-recraete --build"
+    echo_run "docker-compose up -d --force-recreate --build"
 }
 
 install_3x-ui() {
