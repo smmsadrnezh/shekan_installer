@@ -16,5 +16,3 @@ services:
       - "8585:8880/tcp"
     restart: unless-stopped
     privileged: true
-    cap_add:
-      - ALL
