@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  tuic:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tuic:latest
+    container_name: tuic
+    volumes:
+      - ./config.json:/root/config.json:ro
+      - ./fullchain.pem:/root/cert/cert.crt:ro
+      - ./privkey.pem:/root/cert/private.key:ro
+    ports:
+      - "8585:443"
+    restart: unless-stopped
+    privileged: true

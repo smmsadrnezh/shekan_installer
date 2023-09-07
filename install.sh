@@ -5,15 +5,18 @@ if [ ! -f ".env" ]; then
     exit
 fi
 
-if ! grep -q "NEW_PASSWORD=" .env;then
-    echo "export NEW_PASSWORD=\"`tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo ''`\"" >> .env
+if ! grep -q "NEW_PASSWORD=" .env; then
+    echo "export NEW_PASSWORD=\"$(
+        tr -dc A-Za-z0-9 </dev/urandom | head -c 13
+        echo ''
+    )\"" >>.env
 fi
 
 source .env
 
 # Varibales
-export PUBLIC_IP=`curl -s ifconfig.me`
-export REMARK_PREFIX=`echo $DOMAIN | cut -d '.' -f1`
+export PUBLIC_IP=$(curl -s ifconfig.me)
+export REMARK_PREFIX=$(echo $DOMAIN | cut -d '.' -f1)
 
 # SCRIPT SETUP
 
@@ -29,7 +32,7 @@ fi
 
 # UTILITY FUNCTIONS
 
-export TERMINAL_COLUMNS="$(stty -a 2> /dev/null | grep -Po '(?<=columns )\d+' || echo 0)"
+export TERMINAL_COLUMNS="$(stty -a 2>/dev/null | grep -Po '(?<=columns )\d+' || echo 0)"
 
 print_separator() {
     for ((i = 0; i < "$TERMINAL_COLUMNS"; i++)); do
@@ -100,6 +103,12 @@ install_tuic() {
     echo_run "mkdir -p ~/docker/tuic/"
     echo_run "cd ~/docker/tuic/"
     echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
+    UUID=$(uuidgen)
+    PASSWORD=$(
+        tr -dc A-Za-z0-9 </dev/urandom | head -c 13
+        echo ''
+    )
+    echo_run "gcf $PROJECT_CONFIGS/tuic/config.json > config.json"
     echo_run "cp $PROJECT_CONFIGS/tuic/docker-compose.yml ."
     echo_run "docker-compose up -d"
 }
@@ -140,7 +149,6 @@ install_ocserv() {
     echo "URL: $DOMAIN:8443"
 }
 
-
 install_ocserv_build() {
     echo_run "apt install build-essential pkg-config nettle-dev gnutls-bin libgnutls28-dev libprotobuf-c1 libev-dev libreadline-dev -y"
     echo_run "apt autoremove -y"
@@ -166,7 +174,6 @@ install_ocserv_build() {
     echo_run "systemctl start ocserv"
     echo_run "systemctl enable ocserv"
 }
-
 
 setup_ocserv_iptables() {
     echo_run "iptables -A FORWARD -s 172.16.0.0/255.240.0.0 -j ACCEPT"
@@ -317,6 +324,7 @@ ACTIONS=(
     server_initial_setup
     iptables_blacklist
     install_ssl
+    install_tuic
     install_3x-ui
     config_web_panel
     install_ocserv
@@ -325,7 +333,7 @@ ACTIONS=(
     install_nginx
     install_nginx_webmin
     install_nginx_usermin
-    
+
     # Old Methods
     install_xui_legacy
     setup_arvan_cdn
