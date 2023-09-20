@@ -87,6 +87,11 @@ server_initial_setup() {
     echo_run "reboot"
 }
 
+block_ipv6() {
+    echo_run "gcf $PROJECT_CONFIGS/sysctl/ipv6-block.conf > /etc/sysctl.d/10-ipv6-block.conf"
+    echo_run "sysctl -p"
+}
+
 iptables_blacklist() {
     echo_run "iptables -A OUTPUT -d 141.101.0.0/16 -j DROP"
     echo_run "iptables -A OUTPUT -d 173.245.0.0/16 -j DROP"
