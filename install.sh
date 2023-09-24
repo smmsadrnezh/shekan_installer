@@ -316,7 +316,7 @@ setup_fail2ban() {
 setup_firewall() {
     echo_run "cp $PROJECT_CONFIGS/ufw/ufw.conf /etc/ufw/applications.d/ufw.conf"
     echo_run "ufw allow web"
-    echo_run "ufw allow ocserve"
+    echo_run "ufw allow ocserv"
     echo_run "ufw allow v2ray"
     echo_run "ufw allow ssh"
     echo_run "ufw --force enable"
