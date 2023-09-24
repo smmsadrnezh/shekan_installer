@@ -282,7 +282,7 @@ install_nginx_webmin() {
 install_nginx_usermin() {
     echo -e "Add the following DNS record to CloudFlare:"
     echo -e "\tType: CNAME"
-    echo -e "\tFrom: usermin.$DOMAIN"
+    echo -e "\tFrom: user.$DOMAIN"
     echo -e "\tValue: $DOMAIN"
     echo -e "\tProtocol: Default"
     echo "Press enter to continue"
