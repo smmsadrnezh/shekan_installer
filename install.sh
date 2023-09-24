@@ -69,7 +69,7 @@ setup_dns() {
     echo -e "\tType: A"
     echo -e "\tFrom: $DOMAIN"
     echo -e "\tValue: $PUBLIC_IP"
-    echo -e "Add the following DNS record to ArvanCloud:"
+    echo -e "Add the following DNS record to CloudFlare:"
     echo -e "\tType: CNAME"
     echo -e "\tFrom: $DOMAIN_CDN"
     echo -e "\tValue: $DOMAIN"
@@ -260,6 +260,13 @@ install_nginx_xui() {
 }
 
 install_nginx_webmin() {
+    echo -e "Add the following DNS record to CloudFlare:"
+    echo -e "\tType: CNAME"
+    echo -e "\tFrom: webmin.$DOMAIN"
+    echo -e "\tValue: $DOMAIN"
+    echo -e "\tProtocol: Default"
+    echo "Press enter to continue"
+    echo_run "read"
     echo_run "echo 'referers=webmin.$DOMAIN' >> /etc/webmin/config"
     echo_run "echo 'webprefixnoredir=1' >> /etc/webmin/config"
     echo_run "sed -i 's/ssl=.*/ssl=0/' /etc/webmin/miniserv.conf"
@@ -273,6 +280,13 @@ install_nginx_webmin() {
 }
 
 install_nginx_usermin() {
+    echo -e "Add the following DNS record to CloudFlare:"
+    echo -e "\tType: CNAME"
+    echo -e "\tFrom: usermin.$DOMAIN"
+    echo -e "\tValue: $DOMAIN"
+    echo -e "\tProtocol: Default"
+    echo "Press enter to continue"
+    echo_run "read"
     echo_run "echo 'referers=user.$DOMAIN' >> /etc/usermin/config"
     echo_run "echo 'webprefixnoredir=1' >> /etc/usermin/config"
     echo_run "sed -i 's/ssl=.*/ssl=0/' /etc/usermin/miniserv.conf"
