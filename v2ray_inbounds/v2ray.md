@@ -12,18 +12,21 @@ Panel Setting -> Other Setting -> Change timezone to Asia/Tehran
 Save and Restart  
 ## Add Inbound Settings
 Open panel at https://$DOMAIN:7701  
+
 ### Vless + TCP
 enable: On  
 remark: $REMARK_PREFIX-vl-c  
 protocol: vless  
 port: 2052  
 transmission: tcp  
+
 ### Vmess + TCP
 enable: On
 remark: $REMARK_PREFIX-vm-c  
 protocol: vmess  
 port: 2082  
 transmission: tcp  
+
 ### Vless + TCP + TLS
 enable: On  
 remark: $REMARK_PREFIX-vl-ct  
@@ -33,6 +36,7 @@ transmission: tcp
 TLS: On  
 public key file path: /root/cert/cert.crt  
 key file path: /root/cert/private.key  
+
 ### Vmess + TCP + TLS
 enable: On  
 remark: $REMARK_PREFIX-vm-ct  
@@ -42,6 +46,7 @@ transmission: tcp
 TLS: On  
 public key file path: /root/cert/cert.crt  
 key file path: /root/cert/private.key  
+
 ### Vless + WS + TLS
 enable: On  
 remark: $REMARK_PREFIX-vl-wt  
@@ -51,15 +56,24 @@ transmission: ws
 TLS: On  
 public key file path: /root/cert/cert.crt  
 key file path: /root/cert/private.key  
+
+### Vless + gRPC
+enable: On  
+remark: $REMARK_PREFIX-vl-g  
+protocol: vless  
+port: 8445
+transmission: gRPC
+
 ### Vmess + WS + TLS
 enable: On  
-remark: $REMARK_PREFIX-vm-wt  
+remark: s-vm-wt  
 protocol: vmess  
 port: 2096  
 transmission: ws  
 TLS: On  
 public key file path: /root/cert/cert.crt  
 key file path: /root/cert/private.key  
+
 ## Add Client Profile
 Add a user and add scan the QR Code for inbounds  
 For ws only:  
