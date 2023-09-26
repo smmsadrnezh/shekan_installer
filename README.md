@@ -22,3 +22,7 @@ Run the installer:
 ```
 bash install.sh
 ```
+
+## NOTE
+- Your VPS architecture must be Intel/AMD.
+- Make sure to have IPV6 turned off.
