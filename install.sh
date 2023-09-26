@@ -141,7 +141,8 @@ server_initial_setup() {
 
 server_os_upgrade() {
     change_config Prompt normal /etc/update-manager/release-upgrades
-    echo_run "do-release-upgrade -m server"
+    echo "Close script and run this command in terminal:"
+    echo "do-release-upgrade -m server"
 }
 
 block_ipv6() {
