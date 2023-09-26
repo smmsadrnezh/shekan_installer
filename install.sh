@@ -420,7 +420,6 @@ ACTIONS=(
     server_initial_setup
     server_os_upgrade
     block_ipv6
-    iptables_blacklist
     install_ssl
     install_tuic
     install_3x-ui
