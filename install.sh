@@ -448,7 +448,7 @@ ACTIONS=(
     restore_pam_users
 )
 
-OLD_ACTIONS_START=19
+OLD_ACTIONS_START=18
 
 # READ ACTIONS
 while true; do
