@@ -293,7 +293,7 @@ setup_fail2ban() {
 
 setup_firewall() {
     echo_run "gcfc ufw/ufw.conf > /etc/ufw/applications.d/ufw.conf"
-    echo_run "gcfc ufw/after.rules >> /etc/ufw/applications.d/after.rules"
+    echo_run "gcfc ufw/after.rules >> /etc/ufw/after.rules"
     for service in $(cat /etc/ufw/applications.d/ufw.conf | grep "^\[" | tr -d "[" | tr -d "]"); do
         echo_run "ufw allow $service"
     done
