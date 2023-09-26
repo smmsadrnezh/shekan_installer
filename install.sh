@@ -290,8 +290,12 @@ install_mtproxy_docker() {
     cpc mtproxy/docker-compose.yml
     export SECRET=$(openssl rand -hex 16)
     echo_run "docker-compose up -d"
+    ehco "Normal:"
     echo "https://t.me/proxy?server=$DOMAIN&secret=$SECRET&port=$MTPROXY_PORT"
     echo "tg://proxy?server=$DOMAIN&secret=$SECRET&port=$MTPROXY_PORT"
+    ehco "With random padding:"
+    echo "https://t.me/proxy?server=$DOMAIN&secret=dd$SECRET&port=$MTPROXY_PORT"
+    echo "tg://proxy?server=$DOMAIN&secret=dd$SECRET&port=$MTPROXY_PORT"
 }
 
 setup_fail2ban() {
