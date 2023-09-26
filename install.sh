@@ -101,11 +101,6 @@ function change_config() {
     sed -i "s/$1=.*/$1=$2/" $3 && echo "Done" || echo "Failed"
 }
 
-function save_iptables() {
-    apt install iptables-persistent -y
-    invoke-rc.d netfilter-persistent save
-}
-
 function get_subdomains() {
     echo -n $1 | awk -F. '{NF-=2} $1=$1' | tr -s '[:blank:]' '.'
 }
@@ -150,12 +145,6 @@ block_ipv6() {
     echo_run "sysctl -p"
 }
 
-iptables_blacklist() {
-    echo_run "iptables -A OUTPUT -d 141.101.0.0/16 -j DROP"
-    echo_run "iptables -A OUTPUT -d 173.245.0.0/16 -j DROP"
-    echo_run "save_iptables"
-}
-
 install_ssl() {
     echo_run "apt install certbot -y"
     echo_run "certbot certonly -d $DOMAIN --email $CERTBOT_EMAIL --standalone --agree-tos --noninteractive"
@@ -194,10 +183,6 @@ install_ocserv_apt() {
     echo_run "gcfc ocserv/ocserv-apt.conf > /etc/ocserv/ocserv.conf"
     echo_run "gcfc sysctl/ocserv.conf > /etc/sysctl.d/ocserv.conf"
     echo_run "sysctl -p"
-    echo_run "iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT"
-    echo_run "iptables -A FORWARD -s 10.10.0.0/255.255.0.0 -j ACCEPT"
-    echo_run "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
-    echo_run "save_iptables"
     echo_run "systemctl restart ocserv"
     echo_run "systemctl enable ocserv"
     echo "URL: $DOMAIN:${OCSERV_PORT}"
@@ -308,6 +293,7 @@ setup_fail2ban() {
 
 setup_firewall() {
     echo_run "gcfc ufw/ufw.conf > /etc/ufw/applications.d/ufw.conf"
+    echo_run "gcfc ufw/after.rules >> /etc/ufw/applications.d/after.rules"
     for service in $(cat /etc/ufw/applications.d/ufw.conf | grep "^\[" | tr -d "[" | tr -d "]"); do
         echo_run "ufw allow $service"
     done
