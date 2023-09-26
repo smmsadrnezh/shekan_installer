@@ -376,7 +376,6 @@ backup_pam_users() {
     echo_run "awk -v LIMIT=$UGIDLIMIT -v MAX=$UGIDLIMITMAX -F: '(\$3>=LIMIT) && (\$3!=65534) && (\$3<=MAX)' /etc/passwd > /root/move/passwd.mig"
     echo_run "awk -v LIMIT=$UGIDLIMIT -v MAX=$UGIDLIMITMAX -F: '(\$3>=LIMIT) && (\$3!=65534) && (\$3<=MAX)' /etc/group > /root/move/group.mig"
     echo_run "awk -v LIMIT=$UGIDLIMIT -v MAX=$UGIDLIMITMAX -F: '(\$3>=LIMIT) && (\$3!=65534) && (\$3<=MAX) {print \$1}' /etc/passwd | tee - |egrep -f - /etc/shadow > /root/move/shadow.mig"
-    echo_run "cp /etc/gshadow /root/move/gshadow.mig"
     echo "Close script and run this command in terminal:"
     echo "scp -r /root/move/* root@NEW_SERVER_IP_ADDRESS:/root/"
 }
@@ -387,8 +386,7 @@ restore_pam_users() {
     echo_run "cat /root/passwd.mig >> /etc/passwd"
     echo_run "cat /root/group.mig >> /etc/group"
     echo_run "cat /root/shadow.mig >> /etc/shadow"
-    echo_run "cp /root/gshadow.mig /etc/gshadow"
-    echo_run "rm /root/{*.mig,newsusers.bak}"
+    echo_run "rm -rf /root/{*.mig,newsusers.bak}"
     echo_run "reboot"
 }
 
