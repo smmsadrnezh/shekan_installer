@@ -135,6 +135,11 @@ server_initial_setup() {
     echo_run "apt install -y apg tmux vim net-tools docker.io docker-compose"
     echo_run "apt full-upgrade -y"
     echo_run "apt autoremove -y"
+    echo_run "sleep 5"
+    echo_run "reboot"
+}
+
+server_os_upgrade() {
     change_config Prompt normal /etc/update-manager/release-upgrades
     echo_run "do-release-upgrade -m server"
 }
@@ -421,6 +426,7 @@ run_mtproxy() {
 ACTIONS=(
     setup_dns
     server_initial_setup
+    server_os_upgrade
     block_ipv6
     iptables_blacklist
     install_ssl
