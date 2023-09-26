@@ -375,10 +375,11 @@ setup_ocserv_iptables() {
 
 backup_pam_users() {
     echo_run "mkdir /root/move/"
-    echo_run "export UGIDLIMIT=500"
-    echo_run "awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/passwd > /root/move/passwd.mig"
-    echo_run "awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/group > /root/move/group.mig"
-    echo_run "awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534) {print $1}' /etc/passwd | tee - |egrep -f - /etc/shadow > /root/move/shadow.mig"
+    echo_run "export UGIDLIMIT=1000"
+    echo_run "export UGIDLIMITMAX=2000"
+    echo_run "awk -v LIMIT=$UGIDLIMIT -v MAX=$UGIDLIMITMAX -F: '($3>=LIMIT) && ($3!=65534) && ($3<=MAX) &&' /etc/passwd > /root/move/passwd.mig"
+    echo_run "awk -v LIMIT=$UGIDLIMIT -v MAX=$UGIDLIMITMAX -F: '($3>=LIMIT) && ($3!=65534) && ($3<=MAX)' /etc/group > /root/move/group.mig"
+    echo_run "awk -v LIMIT=$UGIDLIMIT -v MAX=$UGIDLIMITMAX -F: '($3>=LIMIT) && ($3!=65534) && ($3<=MAX) {print $1}' /etc/passwd | tee - |egrep -f - /etc/shadow > /root/move/shadow.mig"
     echo_run "cp /etc/gshadow /root/move/gshadow.mig"
     echo_run "scp -r /root/move/* root@NEW_SERVER_IP_ADDRESS:/root/"
 }
