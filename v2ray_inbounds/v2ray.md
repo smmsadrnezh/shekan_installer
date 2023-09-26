@@ -14,7 +14,6 @@ Current Password: admin
 New Username: admin  
 New Password: $NEW_PASSWORD  
 #### Save and Restart  
-## Add Inbound Settings
 Open panel at https://$DOMAIN:$XUI_PORT  
 
 ### Vless + TCP
