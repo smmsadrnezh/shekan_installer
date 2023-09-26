@@ -12,6 +12,6 @@ services:
       - ./fullchain.pem:/root/cert/cert.crt:ro
       - ./privkey.pem:/root/cert/private.key:ro
     ports:
-      - "8443:443"
+      - "${OCSERV_PORT}:443"
     restart: unless-stopped
     privileged: true

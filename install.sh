@@ -1,18 +1,20 @@
 #!/bin/bash
 
+function generate_password() {
+    tr -dc A-Za-z0-9 </dev/urandom | head -c 13; echo ''
+}
+
 if [ ! -f ".env" ]; then
     echo ".env file does not exist."
     exit
 fi
 
 if ! grep -q "NEW_PASSWORD=" .env; then
-    echo "export NEW_PASSWORD=\"$(
-        tr -dc A-Za-z0-9 </dev/urandom | head -c 13
-        echo ''
-    )\"" >>.env
+    echo "export NEW_PASSWORD=\"$(generate_password)\"" >>.env
 fi
 
 source .env
+source .ports
 
 # Varibales
 export PUBLIC_IP=$(curl -s ifconfig.me)
@@ -62,70 +64,247 @@ function gcf() {
     envsubst <$1
 }
 
+function gcfc() {
+    gcf $PROJECT_CONFIGS/$1
+}
+
+function certbot_domains_fix() {
+    echo -n `certbot certificates --cert-name $DOMAIN 2>/dev/null | grep Domains | cut -d':' -f2 | xargs | tr -s '[:blank:]' ','`
+}
+
+function certbot_expand() {
+    OLD_DOMAINS=`certbot_domains_fix`
+    echo_run "certbot certonly --cert-name $DOMAIN -d $OLD_DOMAINS,$@ --email $CERTBOT_EMAIL --expand --standalone --agree-tos --noninteractive"
+}
+
+function certbot_expand_nginx() {
+    OLD_DOMAINS=`certbot_domains_fix`
+    echo_run "certbot --nginx --cert-name $DOMAIN -d $OLD_DOMAINS,$@ --email $CERTBOT_EMAIL --expand --agree-tos --noninteractive"
+}
+
+function ln_ssl() {
+    echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
+}
+
+function dcd() {
+    mkdir -p ~/docker/$1/
+    cd ~/docker/$1/
+}
+
+function cpc() {
+    echo "Config $1 copied."
+    cp $PROJECT_CONFIGS/$1 .
+}
+
+function change_config() {
+    echo -n "Changing $1 to $2 in $3... "
+    sed -i "s/$1=.*/$1=$2/" $3 && echo "Done" || echo "Failed"
+}
+
+function save_iptables() {
+    apt install iptables-persistent -y
+    invoke-rc.d netfilter-persistent save
+}
+
+function get_subdomains() {
+    echo -n $1 | awk -F. '{NF-=2} $1=$1' | tr -s '[:blank:]' '.'
+}
+
+function ln_nginx() {
+    echo_run "ln -s /etc/nginx/sites-available/$1.conf /etc/nginx/sites-enabled/"
+}
+
 # ACTION FUNCTIONS
 
 setup_dns() {
     echo "Add the following DNS record:"
     echo -e "\tType: A"
-    echo -e "\tFrom: $DOMAIN"
+    echo -e "\tName: $(get_subdomains $DOMAIN)"
     echo -e "\tValue: $PUBLIC_IP"
+    echo -e "\tProxy status: off"
     echo -e "Add the following DNS record to CloudFlare:"
     echo -e "\tType: CNAME"
-    echo -e "\tFrom: $DOMAIN_CDN"
-    echo -e "\tValue: $DOMAIN"
-    echo -e "\tProtocol: Default"
+    echo -e "\tFrom: $(get_subdomains $DOMAIN_CDN)"
+    echo -e "\tTarget: $DOMAIN"
 }
 
 server_initial_setup() {
     echo_run "ln -fs /usr/share/zoneinfo/Asia/Tehran /etc/localtime"
     echo_run "dpkg-reconfigure -f noninteractive tzdata"
     echo_run "apt update -y"
-    echo_run "apt install -y apg tmux vim net-tools"
+    echo_run "apt install -y apg tmux vim net-tools docker.io docker-compose"
     echo_run "apt full-upgrade -y"
     echo_run "apt autoremove -y"
-    echo_run "sleep 5"
-    echo_run "reboot"
+    change_config Prompt normal /etc/update-manager/release-upgrades
+    echo_run "do-release-upgrade -m server"
 }
 
 block_ipv6() {
-    echo_run "gcf $PROJECT_CONFIGS/sysctl/ipv6-block.conf > /etc/sysctl.d/10-ipv6-block.conf"
+    echo_run "gcfc sysctl/ipv6-block.conf > /etc/sysctl.d/10-ipv6-block.conf"
     echo_run "sysctl -p"
 }
 
 iptables_blacklist() {
     echo_run "iptables -A OUTPUT -d 141.101.0.0/16 -j DROP"
     echo_run "iptables -A OUTPUT -d 173.245.0.0/16 -j DROP"
-    echo_run "apt install iptables-persistent -y"
-    echo_run "invoke-rc.d netfilter-persistent save"
+    echo_run "save_iptables"
 }
 
 install_ssl() {
-    echo_run "apt install certbot docker.io docker-compose -y"
-    echo_run "certbot certonly --email $CERTBOT_EMAIL -d $DOMAIN -d $DOMAIN_CDN --standalone --agree-tos --redirect --noninteractive"
+    echo_run "apt install certbot -y"
+    echo_run "certbot certonly -d $DOMAIN --email $CERTBOT_EMAIL --standalone --agree-tos --noninteractive"
+    echo_run "certbot_expand $DOMAIN_CDN"
 }
 
 install_tuic() {
-    echo_run "mkdir -p ~/docker/tuic/"
-    echo_run "cd ~/docker/tuic/"
-    echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
+    dcd tuic
+    ln_ssl
     export UUID=$(uuidgen)
-    export PASSWORD=$(
-        tr -dc A-Za-z0-9 </dev/urandom | head -c 13
-        echo ''
-    )
-    echo_run "cp $PROJECT_CONFIGS/tuic/* ."
-    echo_run "gcf $PROJECT_CONFIGS/tuic/config.json > config.json"
+    export PASSWORD=$(generate_password)
+    cpc tuic/*
+    echo_run "gcfc tuic/config.json > config.json"
     echo_run "docker-compose up -d --force-recreate --build"
     echo "Use this config in NekoBox:"
-    echo "tuic://$UUID:$PASSWORD@$DOMAIN:8585/?congestion_control=bbr&udp_relay_mode=native&alpn=h3%2Cspdy%2F3.1&allow_insecure=1#$REMARK_PREFIX-tuic"
+    echo "tuic://$UUID:$PASSWORD@$DOMAIN:$TUIC_PORT/?congestion_control=bbr&udp_relay_mode=native&alpn=h3%2Cspdy%2F3.1&allow_insecure=1#$REMARK_PREFIX-tuic"
 }
 
 install_3x-ui() {
-    echo_run "mkdir -p ~/docker/3x-ui/"
-    echo_run "cd ~/docker/3x-ui/"
-    echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
-    echo_run "cp $PROJECT_CONFIGS/3x-ui/docker-compose.yml ."
+    dcd 3x-ui
+    ln_ssl
+    cpc 3x-ui/docker-compose.yml
     echo_run "docker-compose up -d"
+}
+
+config_xui_panel() {
+    echo_run "gcf $PROJECT_PATH/v2ray_inbounds/v2ray.md"
+}
+
+install_ocserv_apt() {
+    echo_run "useradd -r -s /bin/false ocserv"
+    echo_run "apt install ocserv -y"
+    echo_run "apt remove libpam-cap -y"
+    export CERT="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
+    export KEY="/etc/letsencrypt/live/$DOMAIN/privkey.pem"
+    echo_run "gcfc ocserv/ocserv-apt.conf > /etc/ocserv/ocserv.conf"
+    echo_run "gcfc sysctl/ocserv.conf > /etc/sysctl.d/ocserv.conf"
+    echo_run "sysctl -p"
+    echo_run "iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT"
+    echo_run "iptables -A FORWARD -s 10.10.0.0/255.255.0.0 -j ACCEPT"
+    echo_run "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
+    echo_run "save_iptables"
+    echo_run "systemctl restart ocserv"
+    echo_run "systemctl enable ocserv"
+    echo "URL: $DOMAIN:${OCSERV_PORT}"
+}
+
+install_webmin() {
+    echo_run "sh <(curl -s https://raw.githubusercontent.com/webmin/webmin/master/setup-repos.sh)"
+    echo_run "apt install webmin -y"
+    echo "Panel: http://$DOMAIN:10000"
+    echo "Login to Webmin panel as root"
+    echo "Go to [Webmin → Webmin Configuration → SSL Encryption]"
+    echo "In SSL Settings tab:"
+    echo "Set [Private key file] to /etc/letsencrypt/live/$DOMAIN/privkey.pem"
+    echo "Set [Certificate file] to Separate file and set to /etc/letsencrypt/live/$DOMAIN/cert.pem"
+}
+
+install_usermin() {
+    echo "Go to webmin panel: https://$DOMAIN:10000"
+    echo "From Un-used Modules select Usermin"
+    echo "click install and wait to install"
+    echo "Press enter to continue"
+    echo_run "read"
+    echo_run "apt install usermin -y"
+    echo "Go to webmin panel"
+    echo "Login to Webmin panel as root"
+    echo "Go to [Webmin → Usermin Configuration]"
+    echo 'Click on "Start Usermin"'
+    echo "Go to [Webmin → Usermin Configuration → SSL Encryption]"
+    echo "In SSL Settings:"
+    echo "Set [Private key file] to /etc/letsencrypt/live/$DOMAIN/privkey.pem"
+    echo "Set [Certificate file] to Separate file and set to /etc/letsencrypt/live/$DOMAIN/cert.pem"
+    echo "Go to [Webmin → Usermin Configuration → Module Restrictions]"
+    echo 'Select "Add a new user or group restriction"'
+    echo 'Click on "Members of group" and type "users"'
+    echo 'Select Change Password'
+    echo 'Click on "Create"'
+    echo "Usermin Panel: https://$DOMAIN:20000"
+}
+
+install_nginx() {
+    echo_run "apt install nginx python3-certbot-nginx -y"
+    certbot_expand_nginx $DOMAIN
+    echo_run "systemctl restart nginx"
+}
+
+install_nginx_webmin() {
+    export WEBMIN_DOMAIN=webmin.$DOMAIN
+    echo -e "Add the following DNS record to CloudFlare:"
+    echo -e "\tType: CNAME"
+    echo -e "\tName: $(get_subdomains $WEBMIN_DOMAIN)"
+    echo -e "\tValue: $DOMAIN"
+    echo -e "\tProxy status: off"
+    echo "Press enter to continue"
+    echo_run "read"
+    change_config ssl 0 /etc/webmin/miniserv.conf
+    change_config redirect_ssl 1 /etc/webmin/miniserv.conf
+    echo_run "echo 'redirect_host=$WEBMIN_DOMAIN' >> /etc/webmin/miniserv.conf"
+    echo_run "echo 'referers=$WEBMIN_DOMAIN' >> /etc/webmin/config"
+    echo_run "echo 'webprefixnoredir=1' >> /etc/webmin/config"
+    echo_run "systemctl restart webmin.service"
+    echo_run "gcfc webmin/webmin.conf > /etc/nginx/sites-available/webmin.conf"
+    ln_nginx webmin
+    certbot_expand_nginx $WEBMIN_DOMAIN
+    echo "URL: https://$WEBMIN_DOMAIN"
+}
+
+install_nginx_usermin() {
+    export USERMIN_DOMAIN=user.$DOMAIN
+    echo -e "Add the following DNS record to CloudFlare:"
+    echo -e "\tType: CNAME"
+    echo -e "\tName: $(get_subdomains $USERMIN_DOMAIN)"
+    echo -e "\tValue: $DOMAIN"
+    echo -e "\tProxy status: off"
+    echo "Press enter to continue"
+    echo_run "read"
+    change_config ssl 0 /etc/usermin/miniserv.conf
+    change_config redirect_ssl 1 /etc/usermin/miniserv.conf
+    echo_run "echo 'redirect_host=$USERMIN_DOMAIN' >> /etc/usermin/miniserv.conf"
+    echo_run "echo 'referers=$USERMIN_DOMAIN' >> /etc/usermin/config"
+    echo_run "echo 'webprefixnoredir=1' >> /etc/usermin/config"
+    echo_run "systemctl restart usermin.service"
+    echo_run "gcfc usermin/usermin.conf > /etc/nginx/sites-available/usermin.conf"
+    ln_nginx usermin
+    certbot_expand_nginx $USERMIN_DOMAIN
+    echo "URL: https://$USERMIN_DOMAIN"
+}
+
+install_mtproxy_docker() {
+    dcd mtproxy
+    cpc mtproxy/docker-compose.yml
+    export SECRET=$(openssl rand -hex 16)
+    echo_run "docker-compose up -d"
+    echo "https://t.me/proxy?server=$DOMAIN&secret=$SECRET&port=$MTPROXY_PORT"
+    echo "tg://proxy?server=$DOMAIN&secret=$SECRET&port=$MTPROXY_PORT"
+}
+
+setup_fail2ban() {
+    echo_run "apt install fail2ban -y"
+    echo_run "cp $PROJECT_CONFIGS/jail/jail.local /etc/fail2ban/"
+    echo_run "systemctl restart fail2ban"
+    echo_run "sleep 1"
+    echo_run "fail2ban-client status"
+}
+
+setup_firewall() {
+    echo_run "gcfc ufw/ufw.conf > /etc/ufw/applications.d/ufw.conf"
+    for service in $(cat /etc/ufw/applications.d/ufw.conf | grep "^\[" | tr -d "[" | tr -d "]"); do
+        echo_run "ufw allow $service"
+    done
+    echo_run "ufw allow ssh"
+    echo_run "ufw --force enable"
+    echo_run "ufw default deny incoming"
+    echo_run "ufw status verbose"
 }
 
 install_xui_legacy() {
@@ -136,8 +315,10 @@ install_xui_legacy() {
     echo_run "docker-compose up -d"
 }
 
-config_web_panel() {
-    echo_run "gcf $PROJECT_PATH/v2ray_inbounds/v2ray.md"
+install_nginx_xui() {
+    echo_run "gcf $PROJECT_CONFIGS/x-ui/nginx > /etc/nginx/sites-available/x-ui.conf"
+    echo_run "ln -s /etc/nginx/sites-available/x-ui.conf /etc/nginx/sites-enabled/"
+    echo_run "certbot --nginx -d $DOMAIN -d $DOMAIN_CDN --noninteractive"
 }
 
 setup_arvan_cdn() {
@@ -146,14 +327,14 @@ setup_arvan_cdn() {
     echo "HTTPS Protocol: Automatic"
 }
 
-install_ocserv() {
+install_ocserv_docker() {
     echo_run "useradd -r -s /bin/false ocserv"
     echo_run "mkdir -p ~/docker/"
     echo_run "cp -rf  $PROJECT_CONFIGS/ocserv ~/docker/"
     echo_run "cd ~/docker/ocserv/"
     echo_run "ln -s /etc/letsencrypt/live/$DOMAIN/{fullchain.pem,privkey.pem} ."
     echo_run "docker-compose up -d"
-    echo "URL: $DOMAIN:8443"
+    echo "URL: $DOMAIN:${OCSERV_PORT}"
 }
 
 install_ocserv_build() {
@@ -187,7 +368,7 @@ setup_ocserv_iptables() {
     echo_run "iptables -A FORWARD -s 10.0.0.0/255.0.0.0 -j ACCEPT"
     echo_run "iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT"
     echo_run "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
-    echo_run "iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS  --clamp-mss-to-pmtu"
+    echo_run "iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu"
     echo_run "apt install iptables-persistent -y"
     echo_run "invoke-rc.d netfilter-persistent save"
 }
@@ -213,115 +394,10 @@ restore_pam_users() {
     echo_run "reboot"
 }
 
-install_webmin() {
-    echo_run "sh <(curl -s https://raw.githubusercontent.com/webmin/webmin/master/setup-repos.sh)"
-    echo_run "apt install webmin -y"
-    echo "Panel: https://$DOMAIN:10000"
-    echo "Login to Webmin panel as root"
-    echo "Go to [Webmin → Webmin Configuration → SSL Encryption]"
-    echo "In SSL Settings tab:"
-    echo "Set [Private key file] to /etc/letsencrypt/live/$DOMAIN/privkey.pem"
-    echo "Set [Certificate file] to Separate file and set to /etc/letsencrypt/live/$DOMAIN/cert.pem"
-}
-
-install_usermin() {
-    echo "Go to webmin panel: https://$DOMAIN:10000"
-    echo "From Un-used Modules select Usermin"
-    echo "click install and wait to install"
-    echo "Press enter to continue"
-    echo_run "read"
-    echo_run "apt install usermin -y"
-    echo "Go to webmin panel"
-    echo "Login to Webmin panel as root"
-    echo "Go to [Webmin → Usermin Configuration]"
-    echo 'Click on "Start Usermin"'
-    echo "Go to [Webmin → Usermin Configuration → SSL Encryption]"
-    echo "In SSL Settings:"
-    echo "Set [Private key file] to /etc/letsencrypt/live/$DOMAIN/privkey.pem"
-    echo "Set [Certificate file] to Separate file and set to /etc/letsencrypt/live/$DOMAIN/cert.pem"
-    echo "Go to [Webmin → Usermin Configuration → Module Restrictions]"
-    echo 'Select "Add a new user or group restriction"'
-    echo 'Click on "Members of group" and type "users"'
-    echo 'Select Change Password'
-    echo 'Click on "Create"'
-    echo "Usermin Panel: https://$DOMAIN:20000"
-}
-
-install_nginx() {
-    echo_run "apt install nginx python3-certbot-nginx -y"
-    echo_run "certbot --nginx -d $DOMAIN --noninteractive"
-    echo_run "systemctl restart nginx"
-}
-
-install_nginx_xui() {
-    echo_run "gcf $PROJECT_CONFIGS/x-ui/nginx > /etc/nginx/sites-available/x-ui.conf"
-    echo_run "ln -s /etc/nginx/sites-available/x-ui.conf /etc/nginx/sites-enabled/"
-    echo_run "certbot --nginx -d $DOMAIN -d $DOMAIN_CDN --noninteractive"
-}
-
-install_nginx_webmin() {
-    echo -e "Add the following DNS record to CloudFlare:"
-    echo -e "\tType: CNAME"
-    echo -e "\tFrom: webmin.$DOMAIN"
-    echo -e "\tValue: $DOMAIN"
-    echo -e "\tProtocol: Default"
-    echo "Press enter to continue"
-    echo_run "read"
-    echo_run "echo 'referers=webmin.$DOMAIN' >> /etc/webmin/config"
-    echo_run "echo 'webprefixnoredir=1' >> /etc/webmin/config"
-    echo_run "sed -i 's/ssl=.*/ssl=0/' /etc/webmin/miniserv.conf"
-    echo_run "sed -i 's/redirect_ssl=.*/redirect_ssl=1/' /etc/webmin/miniserv.conf"
-    echo_run "echo 'redirect_host=webmin.$DOMAIN' >> /etc/webmin/miniserv.conf"
-    echo_run "systemctl restart webmin.service"
-    echo_run "gcf $PROJECT_CONFIGS/webmin/webmin.conf > /etc/nginx/sites-available/webmin.conf"
-    echo_run "ln -s /etc/nginx/sites-available/webmin.conf /etc/nginx/sites-enabled/"
-    echo_run "certbot --nginx -d $DOMAIN -d webmin.$DOMAIN --noninteractive --expand"
-    echo "URL: https://webmin.$DOMAIN"
-}
-
-install_nginx_usermin() {
-    echo -e "Add the following DNS record to CloudFlare:"
-    echo -e "\tType: CNAME"
-    echo -e "\tFrom: user.$DOMAIN"
-    echo -e "\tValue: $DOMAIN"
-    echo -e "\tProtocol: Default"
-    echo "Press enter to continue"
-    echo_run "read"
-    echo_run "echo 'referers=user.$DOMAIN' >> /etc/usermin/config"
-    echo_run "echo 'webprefixnoredir=1' >> /etc/usermin/config"
-    echo_run "sed -i 's/ssl=.*/ssl=0/' /etc/usermin/miniserv.conf"
-    echo_run "sed -i 's/redirect_ssl=.*/redirect_ssl=1/' /etc/usermin/miniserv.conf"
-    echo_run "echo 'redirect_host=user.$DOMAIN' >> /etc/usermin/miniserv.conf"
-    echo_run "systemctl restart usermin.service"
-    echo_run "gcf $PROJECT_CONFIGS/usermin/usermin.conf > /etc/nginx/sites-available/usermin.conf"
-    echo_run "ln -s /etc/nginx/sites-available/usermin.conf /etc/nginx/sites-enabled/"
-    echo_run "certbot --nginx -d $DOMAIN -d user.$DOMAIN --noninteractive --expand"
-    echo "URL: https://user.$DOMAIN"
-}
-
 install_namizun() {
     echo_run "apt install proxychains -y"
     echo_run "ssh -NfD 9050 $SSHPROXY"
     echo_run "sudo curl https://raw.githubusercontent.com/malkemit/namizun/master/else/setup.sh | sudo proxychains bash"
-}
-
-setup_fail2ban() {
-    echo_run "apt install fail2ban -y"
-    echo_run "cp $PROJECT_CONFIGS/jail/jail.local /etc/fail2ban/"
-    echo_run "systemctl restart fail2ban"
-    echo_run "sleep 1"
-    echo_run "fail2ban-client status"
-}
-
-setup_firewall() {
-    echo_run "cp $PROJECT_CONFIGS/ufw/ufw.conf /etc/ufw/applications.d/ufw.conf"
-    echo_run "ufw allow web"
-    echo_run "ufw allow ocserv"
-    echo_run "ufw allow v2ray"
-    echo_run "ufw allow ssh"
-    echo_run "ufw --force enable"
-    echo_run "ufw default deny incoming"
-    echo_run "ufw status verbose"
 }
 
 build_mtproxy() {
@@ -344,37 +420,43 @@ run_mtproxy() {
 ACTIONS=(
     setup_dns
     server_initial_setup
+    block_ipv6
     iptables_blacklist
     install_ssl
     install_tuic
     install_3x-ui
-    config_web_panel
-    install_ocserv
+    config_xui_panel
+    install_mtproxy_docker
+    install_ocserv_apt
     install_webmin
     install_usermin
     install_nginx
     install_nginx_webmin
     install_nginx_usermin
+    setup_fail2ban
+    setup_firewall
 
     # Old Methods
     install_xui_legacy
     setup_arvan_cdn
+    install_ocserv
     install_ocserv_build
     setup_ocserv_iptables
     install_nginx_xui
     install_namizun
-    setup_fail2ban
-    setup_firewall
     build_mtproxy
     run_mtproxy
     backup_pam_users
     restore_pam_users
 )
 
+OLD_ACTIONS_START=18
+
 # READ ACTIONS
 while true; do
     echo "Which action? $(if [ ! -z ${LAST_ACTION} ]; then echo "($LAST_ACTION)"; fi)"
     for i in "${!ACTIONS[@]}"; do
+        if [ $i -eq $((OLD_ACTIONS_START - 1)) ]; then echo -e "\n\t- Old Actions: (No need to run)"; fi
         echo -e "\t$((i + 1)). ${ACTIONS[$i]}"
     done
     read ACTION

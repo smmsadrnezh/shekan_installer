@@ -3,35 +3,39 @@ Panel: http://$PUBLIC_IP:54321
 UN: admin  
 PW: admin  
 ## Setup Panel Settings
-Change xray Status to its latest version  
-Panel Setting -> Panel Configuration -> Change port to 7701  
-Panel Setting -> Panel Configuration -> Panel certificate public key file path: /root/cert/cert.crt  
-Panel Setting -> Panel Configuration -> Panel certificate key file path: /root/cert/private.key  
-Panel Setting -> User Setting -> Change password to $NEW_PASSWORD  
-Panel Setting -> Other Setting -> Change timezone to Asia/Tehran  
-Save and Restart  
+#### Panel Setting -> Panel Settings:
+Change port to $XUI_PORT  
+Panel certificate public key file path: /root/cert/cert.crt  
+Panel certificate key file path: /root/cert/private.key  
+Time zone: Asia/Tehran  
+#### Panel Setting -> Security Settings  
+Current Username: admin  
+Current Password: admin  
+New Username: admin  
+New Password: $NEW_PASSWORD  
+#### Save and Restart  
 ## Add Inbound Settings
-Open panel at https://$DOMAIN:7701  
+Open panel at https://$DOMAIN:$XUI_PORT  
 
 ### Vless + TCP
 enable: On  
 remark: $REMARK_PREFIX-vl-c  
 protocol: vless  
-port: 2052  
+port: $XUI_VLC_PORT  
 transmission: tcp  
 
 ### Vmess + TCP
 enable: On
 remark: $REMARK_PREFIX-vm-c  
 protocol: vmess  
-port: 2082  
+port: $XUI_VMC_PORT  
 transmission: tcp  
 
 ### Vless + TCP + TLS
 enable: On  
 remark: $REMARK_PREFIX-vl-ct  
 protocol: vless  
-port: 2053  
+port: $XUI_VLCT_PORT  
 transmission: tcp  
 TLS: On  
 public key file path: /root/cert/cert.crt  
@@ -41,7 +45,7 @@ key file path: /root/cert/private.key
 enable: On  
 remark: $REMARK_PREFIX-vm-ct  
 protocol: vmess  
-port: 2083  
+port: $XUI_VMCT_PORT  
 transmission: tcp  
 TLS: On  
 public key file path: /root/cert/cert.crt  
@@ -51,7 +55,7 @@ key file path: /root/cert/private.key
 enable: On  
 remark: $REMARK_PREFIX-vl-wt  
 protocol: vless  
-port: 2087  
+port: $XUI_VLWT_PORT  
 transmission: ws  
 TLS: On  
 public key file path: /root/cert/cert.crt  
@@ -61,7 +65,7 @@ key file path: /root/cert/private.key
 enable: On  
 remark: $REMARK_PREFIX-vl-g  
 protocol: vless  
-port: 8445
+port: $XUI_VLG_PORT
 transmission: gRPC
 
 ### Vmess + WS + TLS

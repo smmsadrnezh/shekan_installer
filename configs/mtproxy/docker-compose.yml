@@ -1,0 +1,12 @@
+version: "3"
+services:
+  mtproxy:
+    container_name: mtproxy
+    image: telegrammessenger/proxy
+    restart: unless-stopped
+    environment:
+      SECRET: ${SECRET}
+    volumes:
+        - ./data/:/data
+    ports:
+      - "${MTPROXY_PORT}:443"
