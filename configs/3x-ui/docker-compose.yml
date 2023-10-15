@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   panel:
-    image: lovechen/3x-ui:20230914
+    image: lovechen/3x-ui:latest
     restart: unless-stopped
     volumes:
         - ./fullchain.pem:/root/cert/cert.crt:ro
