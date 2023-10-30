@@ -69,7 +69,7 @@ transmission: gRPC
 
 ### Vmess + WS + TLS
 enable: On  
-remark: s-vm-wt  
+remark: $REMARK_PREFIX-vm-wt  
 protocol: vmess  
 port: 2096  
 transmission: ws  
