@@ -1,7 +1,8 @@
 #!/bin/bash
 
 function generate_password() {
-    tr -dc A-Za-z0-9 </dev/urandom | head -c 13; echo ''
+    tr -dc A-Za-z0-9 </dev/urandom | head -c 13
+    echo ''
 }
 
 if [ ! -f ".env" ]; then
@@ -69,16 +70,16 @@ function gcfc() {
 }
 
 function certbot_domains_fix() {
-    echo -n `certbot certificates --cert-name $DOMAIN 2>/dev/null | grep Domains | cut -d':' -f2 | xargs | tr -s '[:blank:]' ','`
+    echo -n $(certbot certificates --cert-name $DOMAIN 2>/dev/null | grep Domains | cut -d':' -f2 | xargs | tr -s '[:blank:]' ',')
 }
 
 function certbot_expand() {
-    OLD_DOMAINS=`certbot_domains_fix`
+    OLD_DOMAINS=$(certbot_domains_fix)
     echo_run "certbot certonly --cert-name $DOMAIN -d $OLD_DOMAINS,$@ --email $CERTBOT_EMAIL --expand --standalone --agree-tos --noninteractive"
 }
 
 function certbot_expand_nginx() {
-    OLD_DOMAINS=`certbot_domains_fix`
+    OLD_DOMAINS=$(certbot_domains_fix)
     echo_run "certbot --nginx --cert-name $DOMAIN -d $OLD_DOMAINS,$@ --email $CERTBOT_EMAIL --expand --agree-tos --noninteractive"
 }
 
@@ -281,6 +282,23 @@ install_mtproxy_docker() {
     ehco "With random padding:"
     echo "https://t.me/proxy?server=$DOMAIN&secret=dd$SECRET&port=$MTPROXY_PORT"
     echo "tg://proxy?server=$DOMAIN&secret=dd$SECRET&port=$MTPROXY_PORT"
+}
+
+install_nginx_stream_proxy() {
+    echo "Make sure you can access $SSH_MIDDLE_SERVER via SSH"
+    echo "Make sure docker is installed and can pull images"
+    echo "Press enter to continue"
+    echo_run "read"
+    nginx_config=$(gcfc nginx-stream-proxy/nginx.conf)
+    docker_config=$(gcfc nginx-stream-proxy/docker-compose.yml)
+    ssh $SSH_MIDDLE_SERVER "
+        mkdir -p ~/docker/nginx-stream-proxy/
+        cd ~/docker/nginx-stream-proxy/
+        echo '$nginx_config' > nginx.conf
+        echo '$docker_config' > docker-compose.yml
+        docker-compose up -d
+    "
+    echo "Use this URL $DOMAIN:$NGINX_STREAM_ACCESS_PORT in any program that supports needed protocols"
 }
 
 setup_fail2ban() {

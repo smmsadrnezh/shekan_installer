@@ -1,0 +1,10 @@
+version: "3"
+services:
+  stream:
+    container_name: nginx-stream-proxy
+    image: nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "$NGINX_STREAM_ACCESS_PORT:7700"
