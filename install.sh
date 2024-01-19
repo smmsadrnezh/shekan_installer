@@ -284,21 +284,20 @@ install_mtproxy_docker() {
     echo "tg://proxy?server=$DOMAIN&secret=dd$SECRET&port=$MTPROXY_PORT"
 }
 
-install_nginx_stream_proxy() {
-    echo "Make sure you can access $SSH_MIDDLE_SERVER via SSH"
-    echo "Make sure docker is installed and can pull images"
+install_nginx_proxy() {
+    echo "Make sure you can access $SSH_MIDDLE_SERVER via SSH and SSH port is 2222"
+    echo "Also docker is installed and can pull images"
     echo "Press enter to continue"
     echo_run "read"
     nginx_config=$(gcfc nginx-stream-proxy/nginx.conf)
     docker_config=$(gcfc nginx-stream-proxy/docker-compose.yml)
     ssh $SSH_MIDDLE_SERVER "
-        mkdir -p ~/docker/nginx-stream-proxy/
-        cd ~/docker/nginx-stream-proxy/
+        mkdir -p ~/docker/nginx-proxy/
+        cd ~/docker/nginx-proxy/
         echo '$nginx_config' > nginx.conf
         echo '$docker_config' > docker-compose.yml
         docker-compose up -d
     "
-    echo "Use this URL $DOMAIN:$NGINX_STREAM_ACCESS_PORT in any program that supports needed protocols"
 }
 
 setup_fail2ban() {
@@ -449,6 +448,7 @@ ACTIONS=(
     install_nginx_usermin
     setup_fail2ban
     setup_firewall
+    install_nginx_proxy
 
     # Old Methods
     install_xui_legacy
